@@ -1,0 +1,80 @@
+{
+  "tournament": {
+    "name": "2026 Whirled Cup",
+    "season": "2025–26"
+  },
+  "owners": [
+    { "id": "jack",    "name": "Jack",    "initialPoints": 4.5 },
+    { "id": "danny",   "name": "Danny",   "initialPoints": 4.0 },
+    { "id": "max",     "name": "Max",     "initialPoints": 4.0 },
+    { "id": "gabe",    "name": "Gabe",    "initialPoints": 4.0 },
+    { "id": "danya",   "name": "Danya",   "initialPoints": 3.5 },
+    { "id": "ro",      "name": "Ro",      "initialPoints": 3.0 },
+    { "id": "ricky",   "name": "Ricky",   "initialPoints": 3.0 },
+    { "id": "bella",   "name": "Bella",   "initialPoints": 2.0 },
+    { "id": "carol",   "name": "Carol",   "initialPoints": 2.0 }
+  ],
+  "teams": [
+    { "id": "mexico",  "name": "🇲🇽 Mexico",  "owner": "ro"  },
+    { "id": "south_africa",  "name": "🇿🇦 South Africa",  "owner": "bella"    },
+    { "id": "switzerland",  "name": "🇨🇭 Switzerland",  "owner": "danny"  },
+    { "id": "canada",  "name": "🇨🇦 Canada",  "owner": "danya"   },
+    { "id": "bosnia",  "name": "🇧🇦 Bosnia",  "owner": "max"    },
+    { "id": "brazil",  "name": "🇧🇷 Brazil",  "owner": "jack"  },
+    { "id": "morocco",  "name": "🇲🇦 Morocco",  "owner": "max"  },
+    { "id": "usa",  "name": "🇺🇸 USA",  "owner": "danya"  },
+    { "id": "australia",  "name": "🇦🇺 Australia",  "owner": "ro"  },
+    { "id": "paraguay",  "name": "🇵🇾 Paraguay",  "owner": "jack"    },
+    { "id": "germany",  "name": "🇩🇪 Germany",  "owner": "carol"  },
+    { "id": "ivory_coast",  "name": "🇨🇮 Ivory Coast",  "owner": "gabe"   },
+    { "id": "ecuador",  "name": "🇪🇨 Ecuador",  "owner": "ricky"    },
+    { "id": "netherlands",  "name": "🇳🇱 Netherlands",  "owner": "jack"  },
+    { "id": "japan",  "name": "🇯🇵 Japan",  "owner": "ro"  },
+    { "id": "sweden",  "name": "🇸🇪 Sweden",  "owner": "danny"  },
+    { "id": "belgium",  "name": "🇧🇪 Belgium",  "owner": "danya"  },
+    { "id": "egypt",  "name": "🇪🇬 Egypt",  "owner": "gabe"    },
+    { "id": "spain",  "name": "🇪🇸 Spain",  "owner": "carol"  },
+    { "id": "cape_verde",  "name": "🇨🇻 Cape Verde",  "owner": "danny"   },
+    { "id": "france",  "name": "🇫🇷 France",  "owner": "danny"    },
+    { "id": "norway",  "name": "🇳🇴 Norway",  "owner": "carol"  },
+    { "id": "senegal",  "name": "🇸🇳 Senegal",  "owner": "max"  },
+    { "id": "argentina",  "name": "🇦🇷 Argentina",  "owner": "gabe"  },
+    { "id": "colombia",  "name": "🇨🇴 Colombia",  "owner": "gabe"  },
+    { "id": "portugal",  "name": "🇵🇹 Portugal",  "owner": "bella"    },
+    { "id": "dr_congo",  "name": "🇨🇩 DR Congo",  "owner": "jack"  },
+    { "id": "england",  "name": "🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",  "owner": "max"   },
+    { "id": "croatia",  "name": "🇭🇷 Croatia",  "owner": "ricky"    },
+    { "id": "ghana",  "name": "🇬🇭 Ghana",  "owner": "jack"  },
+    { "id": "algeria",  "name": "🇮🇩 Algeria",  "owner": "danny"  },
+    { "id": "austria",  "name": "🇦🇹 Austria",  "owner": "danya"  }
+  ],
+  "bracket": {
+    "round1": [
+      { "matchId": "r1m01", "team1": "germany", "team2": "paraguay" },
+      { "matchId": "r1m02", "team1": "france", "team2": "sweden" },
+      { "matchId": "r1m03", "team1": "south_africa", "team2": "canada" },
+      { "matchId": "r1m04", "team1": "netherlands", "team2": "morocco" },
+      { "matchId": "r1m05", "team1": "portugal", "team2": "croatia" },
+      { "matchId": "r1m06", "team1": "spain", "team2": "austria" },
+      { "matchId": "r1m07", "team1": "usa", "team2": "bosnia" },
+      { "matchId": "r1m08", "team1": "belgium", "team2": "senegal" },
+      { "matchId": "r1m09", "team1": "brazil", "team2": "japan" },
+      { "matchId": "r1m10", "team1": "ivory_coast", "team2": "norway" },
+      { "matchId": "r1m11", "team1": "mexico", "team2": "ecuador" },
+      { "matchId": "r1m12", "team1": "england", "team2": "dr_congo" },
+      { "matchId": "r1m13", "team1": "argentina", "team2": "cape_verde" },
+      { "matchId": "r1m14", "team1": "australia", "team2": "egypt" },
+      { "matchId": "r1m15", "team1": "switzerland", "team2": "iran" },
+      { "matchId": "r1m16", "team1": "colombia", "team2": "ghana" }
+    ]
+  },
+  "results": {
+    "round1": {},
+    "round2": {},
+    "round3": {},
+    "round4": {},
+    "thirdPlace": null,
+    "championship": null
+  },
+  "trades": []
+}

@@ -1,0 +1,54 @@
+/* ===========================
+   Tournament Bracket – Global Styles
+   Palette: deep navy field, bright gold accent, warm white text
+   Type: Barlow Condensed (display/numbers) + Barlow (body/labels)
+   =========================== */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --navy:       #0d1b2a;
+  --navy-mid:   #152338;
+  --navy-light: #1e3255;
+  --gold:       #f0b429;
+  --gold-dim:   #c49120;
+  --gold-faint: rgba(240, 180, 41, 0.12);
+  --green:      #2dce89;
+  --red:        #f75f6e;
+  --white:      #f0eeea;
+  --muted:      #8899aa;
+  --border:     rgba(255,255,255,0.08);
+  --card-bg:    #152338;
+  --hover-bg:   #1e3255;
+
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body:    'Barlow', sans-serif;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--navy);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--navy-mid); }
+::-webkit-scrollbar-thumb { background: var(--navy-light); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+button {
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+a { color: var(--gold); }

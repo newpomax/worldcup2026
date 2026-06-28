@@ -1,3 +1,6 @@
 .vscode/
 .venv/
 __pycache__/
+node_modules/
+dk_odds/
+.DS_Store

@@ -1,0 +1,139 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.bracketScroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  padding: 20px 24px 0;
+}
+
+/* ---- Column headers ---- */
+.headers {
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 8px;
+}
+
+.headerCell {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.headerCenter {
+  color: var(--gold);
+  font-size: 11px;
+}
+
+/* ---- Main body ---- */
+.body {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.roundCol {
+  /* set via inline styles */
+}
+
+/* ---- Center column ---- */
+.centerCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  width: 220px;
+  flex-shrink: 0;
+  height: 800px; /* COL_HEIGHT */
+}
+
+.centerTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+}
+
+.centerBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  justify-content: center;
+  opacity: 0.85;
+}
+
+.centerLabel {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+}
+
+.thirdPlaceLabel {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ---- Legend ---- */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px 24px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.legendTitle {
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legendHint {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.6;
+  font-style: italic;
+  margin-left: auto;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

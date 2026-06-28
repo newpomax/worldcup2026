@@ -1,0 +1,179 @@
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--white);
+}
+
+.simNote {
+  font-size: 12px;
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.table {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  transition: border-color 0.15s;
+}
+
+.row:hover {
+  border-color: rgba(255,255,255,0.12);
+}
+
+.leader {
+  border-color: rgba(240, 180, 41, 0.3);
+  background: linear-gradient(90deg, rgba(240,180,41,0.06) 0%, var(--card-bg) 60%);
+}
+
+.rank {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--muted);
+  min-width: 36px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.leader .rank {
+  color: var(--gold);
+}
+
+.ownerInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.ownerName {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.teamList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.teamPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+}
+
+.winTeam {
+  background: rgba(240, 180, 41, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(240,180,41,0.2);
+}
+
+.champTeam {
+  background: rgba(192, 132, 252, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(192,132,252,0.3);
+}
+
+.thirdTeam {
+  background: rgba(45, 206, 137, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(45,206,137,0.2);
+}
+
+.elimTeam {
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  opacity: 0.5;
+}
+
+.teamWins {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* Points column */
+.pointsBlock {
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+.totalPts {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--white);
+  margin-bottom: 2px;
+}
+
+.leader .totalPts {
+  color: var(--gold);
+}
+
+.pointsBreakdown {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.initial {
+  opacity: 0.7;
+}
+
+.gained {
+  color: var(--green);
+  font-weight: 600;
+}
+
+.bar {
+  height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.leader .barFill {
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+}
