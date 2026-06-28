@@ -1,5 +1,6 @@
 import React from 'react';
 import styles from './MatchCard.module.css';
+import { applyTradesUpTo } from '../bracketLogic';
 
 /**
  * Renders a single match with two team slots.
@@ -12,6 +13,7 @@ export default function MatchCard({
   match,
   teamMap,
   ownerMap,
+  postTradeOwnerMap,
   confirmedResults,
   roundKey,
   onPick,
@@ -22,6 +24,8 @@ export default function MatchCard({
   if (!match) return null;
 
   const { matchId, team1Id, team2Id, winnerId } = match;
+  const roundNum = Number(matchId.split('m')[0]?.replace(/r/g, '')) || 0;
+  console.log(`Round Num: ${roundNum}`);
 
   const team1 = team1Id ? teamMap[team1Id] : null;
   const team2 = team2Id ? teamMap[team2Id] : null;
@@ -48,6 +52,11 @@ export default function MatchCard({
     if (!teamId) return 'none';
     return highlightedTeams.has(teamId) ? 'highlight' : 'dim';
   }
+  const effectiveOwnerMap = postTradeOwnerMap[roundNum] ?? {};
+  const team1Owner = effectiveOwnerMap[team1Id];
+  const team2Owner = effectiveOwnerMap[team2Id];
+  console.log(`${team1Id}: ${effectiveOwnerMap[team1Id]}`);
+  console.log(`${team2Id}: ${effectiveOwnerMap[team2Id]}`);
 
   return (
     <div className={`
@@ -57,7 +66,7 @@ export default function MatchCard({
     `}>
       <TeamSlot
         team={team1}
-        owner={team1 ? ownerMap[team1?.owner] : null}
+        owner={team1 ? ownerMap[team1Owner] : null}
         isWinner={!!winnerId && winnerId === team1Id}
         isLoser={!!winnerId && winnerId !== team1Id && !!team1Id}
         isLocked={isLocked}
@@ -69,7 +78,7 @@ export default function MatchCard({
       <div className={styles.divider} />
       <TeamSlot
         team={team2}
-        owner={team2 ? ownerMap[team2?.owner] : null}
+        owner={team2 ? ownerMap[team2Owner] : null}
         isWinner={!!winnerId && winnerId === team2Id}
         isLoser={!!winnerId && winnerId !== team2Id && !!team2Id}
         isLocked={isLocked}

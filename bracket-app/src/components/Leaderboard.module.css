@@ -219,11 +219,18 @@
   color: var(--green);
   border: 1px solid rgba(45,206,137,0.2);
 }
+.pillOther {
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  opacity: 0.5;
+}
 .pillElim {
   background: rgba(255,255,255,0.04);
   color: var(--muted);
   border: 1px solid var(--border);
   opacity: 0.5;
+  text-decoration: line-through;
 }
 
 .pillWins { opacity: 0.85; font-size: 9px; }

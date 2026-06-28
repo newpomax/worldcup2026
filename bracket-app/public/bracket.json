@@ -45,7 +45,7 @@
     { "id": "england",  "name": "🏴󠁧󠁢󠁥󠁮󠁧󠁿 England",  "owner": "max"   },
     { "id": "croatia",  "name": "🇭🇷 Croatia",  "owner": "ricky"    },
     { "id": "ghana",  "name": "🇬🇭 Ghana",  "owner": "jack"  },
-    { "id": "algeria",  "name": "🇮🇩 Algeria",  "owner": "danny"  },
+    { "id": "algeria",  "name": "🇩🇿 Algeria",  "owner": "danny"  },
     { "id": "austria",  "name": "🇦🇹 Austria",  "owner": "danya"  },
     { "id": "new_zealand",  "name": "🇮🇳 New Zealand",  "owner": "danya"  },
     { "id": "scotland",  "name": "🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",  "owner": "jack"  }
@@ -71,7 +71,9 @@
     ]
   },
   "results": {
-    "round1": {},
+    "round1": {
+      "r1m03": "canada"
+    },
     "round2": {},
     "round3": {},
     "round4": {},

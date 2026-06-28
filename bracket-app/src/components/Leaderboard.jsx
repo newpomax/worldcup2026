@@ -2,18 +2,18 @@ import React from 'react';
 import styles from './Leaderboard.module.css';
 
 export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, fullPage = false }) {
-  const { ownerPoints, ownerInitialPoints, ownerTransferredPoints, ownerMap, ownerTeams, teamWins, teamIsChamp, teamIsThird } = bracketState;
+  const { ownerPoints, ownerInitialPoints, ownerTransferredPoints, ownerMap, ownerTeams, teamWins, teamElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const sorted = Object.entries(ownerPoints)
     .map(([ownerId, pts]) => ({
       owner: ownerMap[ownerId],
-      pts,
-      initial: (ownerInitialPoints[ownerId] || 0) + (ownerTransferredPoints[ownerId] || 0),
+      ptsSimulated: pts,
+      ptsEarned: (ownerInitialPoints[ownerId] || 0) + (ownerTransferredPoints[ownerId] || 0),
     }))
-    .sort((a, b) => b.pts - a.pts);
+    .sort((a, b) => b.ptsSimulated - a.ptsSimulated);
 
-  const maxPts = Math.max(...sorted.map(r => r.pts), 1);
-  const minPts = Math.min(...sorted.map(r => r.pts), 0);
+  const maxPts = Math.max(...sorted.map(r => r.ptsSimulated), 1);
+  const minPts = Math.min(...sorted.map(r => r.ptsSimulated), 0);
   const range = maxPts - Math.min(minPts, 0);
 
   function fmtPts(n) {
@@ -38,9 +38,9 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
         {sorted.map((row, idx) => {
           const ownerId = row.owner.id;
           const teams = ownerTeams[ownerId] || [];
-          const tournamentGained = row.pts - row.initial;
+          const tournamentGained = row.ptsSimulated - row.ptsEarned;
           const diff = fmtDiff(tournamentGained);
-          const barWidth = range > 0 ? Math.max(0, (row.pts - Math.min(minPts, 0)) / range) * 100 : 50;
+          const barWidth = range > 0 ? Math.max(0, (row.ptsSimulated - Math.min(minPts, 0)) / range) * 100 : 50;
           const isSelected = selectedOwner === ownerId;
           const isDimmed = anySelected && !isSelected;
 
@@ -57,7 +57,7 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                 </span>
                 <div className={styles.pts}>
                   <span className={`${styles.ptsTotal} ${fullPage ? styles.ptsTotalFull : ''} ${row.pts < 0 ? styles.negative : ''}`}>
-                    {fmtPts(row.pts)}
+                    {fmtPts(row.ptsSimulated)}
                   </span>
                   {diff && (
                     <span className={`${styles.ptsDiff} ${fullPage ? styles.ptsDiffFull : ''} ${tournamentGained >= 0 ? styles.pos : styles.neg}`}>
@@ -78,7 +78,7 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                   const wins = teamWins[t.id] || 0;
                   const isChamp = teamIsChamp[t.id];
                   const isThird = teamIsThird[t.id];
-                  const isElim = wins === 0;
+                  const isElim = teamElimed[t.id];
                   return (
                     <span
                       key={t.id}
@@ -86,7 +86,7 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                         ${isChamp ? styles.pillChamp : ''}
                         ${isThird ? styles.pillThird : ''}
                         ${wins > 0 && !isChamp && !isThird ? styles.pillWin : ''}
-                        ${isElim ? styles.pillElim : ''}
+                        ${isElim ? styles.pillElim : styles.pillOther}
                       `}
                     >
                       {t.name}

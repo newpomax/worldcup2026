@@ -132,6 +132,13 @@ export function buildBracket(data, results) {
     winnerId: (thirdTeam1 || thirdTeam2) ? (results?.thirdPlace || null) : null,
   };
 
+  // --- Compute owner after trades ----
+  const postTradeOwnerMap = {}; // map of round number to { team: owner } map
+  for (let r = 1; r < 4; r++) {
+    const { teamOwner } = applyTradesUpTo(data, r);
+    postTradeOwnerMap[r] = teamOwner;
+  }
+
   // ---- Compute owner points with trade-aware ownership ----
   // Start everyone at initialPoints
   const ownerPoints = {};
@@ -160,6 +167,7 @@ export function buildBracket(data, results) {
       if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 1;
     });
   });
+  console.log(`postTradeOwner: ${postTradeOwnerMap}`)
 
   // 3rd place — uses ownership state before 'thirdPlace'
   if (thirdPlaceMatch.winnerId) {
@@ -186,12 +194,21 @@ export function buildBracket(data, results) {
 
   // ---- Count wins per team (for display) ----
   const teamWins = {};
+  const teamElimed = {};
   const teamIsChamp = {};
   const teamIsThird = {};
 
   const allMatchesFlat = [...rounds.flat(), thirdPlaceMatch, champMatch];
+  data.teams.forEach(t => {
+    teamElimed[t.id] = true;
+  });
   allMatchesFlat.forEach(m => {
+    teamElimed[m.team1Id] = false;
+    teamElimed[m.team2Id] = false;
     if (!m?.winnerId) return;
+    const losingTeamId = m.team1Id == m.winnerId? m.team2Id : m.team1Id;
+    teamElimed[m.winnerId] = false;
+    teamElimed[losingTeamId] = true;
     if (m.matchId === 'championship') {
       teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 2;
       teamIsChamp[m.winnerId] = true;
@@ -203,14 +220,17 @@ export function buildBracket(data, results) {
     }
   });
 
+
   return {
     teamMap,
     ownerMap,
+    postTradeOwnerMap,
     ownerInitialPoints,
     ownerPoints,
     ownerTransferredPoints,
     ownerTeams,       // current rosters post-trades
     teamWins,         // teamId → points earned
+    teamElimed,
     teamIsChamp,
     teamIsThird,
     rounds,
