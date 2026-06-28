@@ -1,103 +1,131 @@
 import React from 'react';
 import styles from './Leaderboard.module.css';
 
-export default function Leaderboard({ rawData, bracketState, hasSimulation }) {
-  const { ownerPoints, ownerMap, teamMap, rounds, thirdPlaceMatch, champMatch } = bracketState;
+export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, fullPage = false }) {
+  const { ownerPoints, ownerInitialPoints, ownerTransferredPoints, ownerMap, ownerTeams, teamWins, teamIsChamp, teamIsThird } = bracketState;
 
-  // Sort owners by total points desc
   const sorted = Object.entries(ownerPoints)
     .map(([ownerId, pts]) => ({
       owner: ownerMap[ownerId],
       pts,
-      initial: rawData.owners.find(o => o.id === ownerId)?.initialPoints || 0,
+      initial: (ownerInitialPoints[ownerId] || 0) + (ownerTransferredPoints[ownerId] || 0),
     }))
     .sort((a, b) => b.pts - a.pts);
 
-  // Build a map: owner → their teams + how many wins each got
-  const ownerTeams = {};
-  rawData.owners.forEach(o => { ownerTeams[o.id] = []; });
-  rawData.teams.forEach(t => {
-    if (ownerTeams[t.owner]) ownerTeams[t.owner].push({ ...t, wins: 0, isChamp: false, isThird: false });
-  });
+  const maxPts = Math.max(...sorted.map(r => r.pts), 1);
+  const minPts = Math.min(...sorted.map(r => r.pts), 0);
+  const range = maxPts - Math.min(minPts, 0);
 
-  // Count wins per team
-  const allMatches = [...rounds.flat(), thirdPlaceMatch, champMatch];
-  allMatches.forEach(match => {
-    if (!match?.winnerId) return;
-    for (const ownerId of Object.keys(ownerTeams)) {
-      const team = ownerTeams[ownerId].find(t => t.id === match.winnerId);
-      if (team) {
-        if (match.matchId === 'championship') {
-          team.wins += 2; // +1 win + 1 bonus
-          team.isChamp = true;
-        } else if (match.matchId === 'thirdPlace') {
-          team.wins += 0.5;
-          team.isThird = true;
-        } else {
-          team.wins += 1;
-        }
-      }
-    }
-  });
+  function fmtPts(n) {
+    if (n === 0) return '0';
+    const s = Math.abs(n) % 1 === 0 ? Math.abs(n).toFixed(0) : Math.abs(n).toFixed(1);
+    return (n < 0 ? '−' : '') + s;
+  }
 
-  const maxPts = sorted[0]?.pts || 1;
+  function fmtDiff(n) {
+    if (n === 0) return null;
+    const s = Math.abs(n) % 1 === 0 ? Math.abs(n).toFixed(0) : Math.abs(n).toFixed(1);
+    return (n > 0 ? '+' : '−') + s;
+  }
+
+  const anySelected = !!selectedOwner;
 
   return (
-    <div className={styles.container}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Owner Standings</h2>
-        {hasSimulation && (
-          <span className={styles.simNote}>* includes simulated picks</span>
-        )}
-      </div>
-
-      <div className={styles.table}>
+    <div className={`${styles.container} ${fullPage ? styles.fullPage : ''}`}>
+      {fullPage && <h2 className={styles.pageTitle}>Standings</h2>}
+      {hasSimulation && <p className={styles.simNote}>* includes simulated picks</p>}
+      <div className={fullPage ? styles.gridFull : styles.grid}>
         {sorted.map((row, idx) => {
-          const gained = row.pts - row.initial;
           const ownerId = row.owner.id;
           const teams = ownerTeams[ownerId] || [];
-          const activeTeams = teams.filter(t => t.wins > 0);
-          const elimTeams = teams.filter(t => t.wins === 0);
+          const tournamentGained = row.pts - row.initial;
+          const diff = fmtDiff(tournamentGained);
+          const barWidth = range > 0 ? Math.max(0, (row.pts - Math.min(minPts, 0)) / range) * 100 : 50;
+          const isSelected = selectedOwner === ownerId;
+          const isDimmed = anySelected && !isSelected;
+
+          const sortedTeams = [...teams].sort((a, b) => (teamWins[b.id] || 0) - (teamWins[a.id] || 0));
+
+          const cardEl = (
+            <>
+              <div className={styles.cardTop}>
+                <span className={`${styles.rank} ${fullPage ? styles.rankFull : ''}`}>
+                  {idx === 0 ? '🏆' : `#${idx + 1}`}
+                </span>
+                <span className={`${styles.ownerName} ${fullPage ? styles.ownerNameFull : ''}`}>
+                  {row.owner.name}
+                </span>
+                <div className={styles.pts}>
+                  <span className={`${styles.ptsTotal} ${fullPage ? styles.ptsTotalFull : ''} ${row.pts < 0 ? styles.negative : ''}`}>
+                    {fmtPts(row.pts)}
+                  </span>
+                  {diff && (
+                    <span className={`${styles.ptsDiff} ${fullPage ? styles.ptsDiffFull : ''} ${tournamentGained >= 0 ? styles.pos : styles.neg}`}>
+                      {diff}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className={styles.barWrap}>
+                <div className={`${styles.barTrack} ${fullPage ? styles.barTrackFull : ''}`}>
+                  <div className={styles.barFill} style={{ width: `${barWidth}%` }} />
+                </div>
+              </div>
+
+              <div className={styles.teamList}>
+                {sortedTeams.map(t => {
+                  const wins = teamWins[t.id] || 0;
+                  const isChamp = teamIsChamp[t.id];
+                  const isThird = teamIsThird[t.id];
+                  const isElim = wins === 0;
+                  return (
+                    <span
+                      key={t.id}
+                      className={`${styles.pill} ${fullPage ? styles.pillFull : ''}
+                        ${isChamp ? styles.pillChamp : ''}
+                        ${isThird ? styles.pillThird : ''}
+                        ${wins > 0 && !isChamp && !isThird ? styles.pillWin : ''}
+                        ${isElim ? styles.pillElim : ''}
+                      `}
+                    >
+                      {t.name}
+                      {wins > 0 && (
+                        <span className={styles.pillWins}>
+                          {isChamp ? '★' : isThird ? '③' : `+${wins % 1 === 0 ? wins.toFixed(0) : wins.toFixed(1)}`}
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
+              </div>
+            </>
+          );
+
+          if (fullPage) {
+            return (
+              <div
+                key={ownerId}
+                className={`${styles.card} ${styles.cardFull} ${idx === 0 ? styles.leader : ''}`}
+              >
+                {cardEl}
+              </div>
+            );
+          }
 
           return (
-            <div key={ownerId} className={`${styles.row} ${idx === 0 ? styles.leader : ''}`}>
-              <div className={styles.rank}>
-                {idx === 0 ? '🏆' : `#${idx + 1}`}
-              </div>
-
-              <div className={styles.ownerInfo}>
-                <div className={styles.ownerName}>{row.owner.name}</div>
-                <div className={styles.teamList}>
-                  {activeTeams.map(t => (
-                    <span key={t.id} className={`${styles.teamPill} ${t.isChamp ? styles.champTeam : t.isThird ? styles.thirdTeam : styles.winTeam}`}>
-                      {t.name}
-                      <span className={styles.teamWins}>+{t.wins}</span>
-                    </span>
-                  ))}
-                  {elimTeams.map(t => (
-                    <span key={t.id} className={`${styles.teamPill} ${styles.elimTeam}`}>
-                      {t.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className={styles.pointsBlock}>
-                <div className={styles.totalPts}>
-                  {row.pts % 1 === 0 ? row.pts.toFixed(0) : row.pts.toFixed(1)}
-                </div>
-                <div className={styles.pointsBreakdown}>
-                  <span className={styles.initial}>{row.initial}</span>
-                  {gained > 0 && <span className={styles.gained}> +{gained % 1 === 0 ? gained.toFixed(0) : gained.toFixed(1)}</span>}
-                </div>
-                <div className={styles.bar}>
-                  <div
-                    className={styles.barFill}
-                    style={{ width: `${(row.pts / maxPts) * 100}%` }}
-                  />
-                </div>
-              </div>
-            </div>
+            <button
+              key={ownerId}
+              className={`${styles.card}
+                ${idx === 0 ? styles.leader : ''}
+                ${isSelected ? styles.selected : ''}
+                ${isDimmed ? styles.dimmed : ''}
+              `}
+              onClick={() => onSelectOwner(ownerId)}
+              title={isSelected ? 'Click to deselect' : `Highlight ${row.owner.name}'s teams`}
+            >
+              {cardEl}
+            </button>
           );
         })}
       </div>

@@ -5,8 +5,8 @@
   },
   "owners": [
     { "id": "danny",   "name": "Danny",   "initialPoints": 5.0 },
-    { "id": "danya",   "name": "Danya",   "initialPoints": 4.5 },
-    { "id": "jack",    "name": "Jack",    "initialPoints": 4.5 },
+    { "id": "jack",    "name": "Jack",    "initialPoints": 5.0 },
+    { "id": "danya",   "name": "Danya",   "initialPoints": 4.0 },
     { "id": "max",     "name": "Max",     "initialPoints": 4.0 },
     { "id": "gabe",    "name": "Gabe",    "initialPoints": 4.0 },
     { "id": "ro",      "name": "Ro",      "initialPoints": 3.0 },
@@ -28,10 +28,10 @@
     { "id": "germany",  "name": "🇩🇪 Germany",  "owner": "carol"  },
     { "id": "ivory_coast",  "name": "🇨🇮 Ivory Coast",  "owner": "gabe"   },
     { "id": "ecuador",  "name": "🇪🇨 Ecuador",  "owner": "ricky"    },
-    { "id": "netherlands",  "name": "🇳🇱 Netherlands",  "owner": "jack"  },
+    { "id": "netherlands",  "name": "🇳🇱 Netherlands",  "owner": "danya"  },
     { "id": "japan",  "name": "🇯🇵 Japan",  "owner": "ro"  },
     { "id": "sweden",  "name": "🇸🇪 Sweden",  "owner": "danny"  },
-    { "id": "belgium",  "name": "🇧🇪 Belgium",  "owner": "danya"  },
+    { "id": "belgium",  "name": "🇧🇪 Belgium",  "owner": "jack"  },
     { "id": "egypt",  "name": "🇪🇬 Egypt",  "owner": "gabe"    },
     { "id": "spain",  "name": "🇪🇸 Spain",  "owner": "ricky"  },
     { "id": "cape_verde",  "name": "🇨🇻 Cape Verde",  "owner": "danny"   },
@@ -46,7 +46,9 @@
     { "id": "croatia",  "name": "🇭🇷 Croatia",  "owner": "ricky"    },
     { "id": "ghana",  "name": "🇬🇭 Ghana",  "owner": "jack"  },
     { "id": "algeria",  "name": "🇮🇩 Algeria",  "owner": "danny"  },
-    { "id": "austria",  "name": "🇦🇹 Austria",  "owner": "danya"  }
+    { "id": "austria",  "name": "🇦🇹 Austria",  "owner": "danya"  },
+    { "id": "new_zealand",  "name": "🇮🇳 New Zealand",  "owner": "danya"  },
+    { "id": "scotland",  "name": "🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",  "owner": "jack"  }
   ],
   "bracket": {
     "round1": [
@@ -76,5 +78,21 @@
     "thirdPlace": null,
     "championship": null
   },
-  "trades": []
+  "trades": [
+      {
+        "round": 1,
+        "partyA": { "owner": "jack", "teams_given": ["belgium"], "points_given": 0 },
+        "partyB": { "owner": "danya",   "teams_given": ["netherlands"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "jack", "teams_given": [], "points_given": 0.5 },
+        "partyB": { "owner": "danya",   "teams_given": ["new_zealand"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "jack", "teams_given": ["scotland"], "points_given": 0 },
+        "partyB": { "owner": "bella",   "teams_given": ["paraguay"], "points_given": 0 }
+      }
+  ]
 }

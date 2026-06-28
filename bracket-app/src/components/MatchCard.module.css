@@ -5,6 +5,7 @@
   overflow: hidden;
   width: 176px;
   flex-shrink: 0;
+  transition: box-shadow 0.15s;
 }
 
 .championship {
@@ -33,21 +34,13 @@
   text-align: left;
   color: var(--white);
   cursor: default;
-  transition: background 0.12s;
+  transition: background 0.12s, opacity 0.15s;
   font-family: inherit;
 }
 
-.clickable {
-  cursor: pointer;
-}
-
-.clickable:hover {
-  background: var(--hover-bg);
-}
-
-.clickable:hover .teamName {
-  color: var(--gold);
-}
+.clickable { cursor: pointer; }
+.clickable:hover { background: var(--hover-bg); }
+.clickable:hover .teamName { color: var(--gold); }
 
 .empty {
   display: flex;
@@ -55,20 +48,35 @@
   min-height: 44px;
 }
 
-.winner {
-  background: rgba(240, 180, 41, 0.1) !important;
+/* Match result states */
+.winner { background: rgba(240, 180, 41, 0.1) !important; }
+.winner .teamName { color: var(--gold) !important; }
+.loser { opacity: 0.4; }
+.loser .teamName { text-decoration: line-through; }
+
+/* ---- Owner highlight states ---- */
+.slotHighlight {
+  background: rgba(240, 180, 41, 0.07) !important;
+  box-shadow: inset 2px 0 0 var(--gold);
 }
 
-.winner .teamName {
+.slotHighlight .teamName {
   color: var(--gold) !important;
 }
 
-.loser {
-  opacity: 0.4;
+/* Don't double-highlight winners */
+.winner.slotHighlight {
+  background: rgba(240, 180, 41, 0.18) !important;
+  box-shadow: inset 2px 0 0 var(--gold);
 }
 
-.loser .teamName {
-  text-decoration: line-through;
+.slotDim {
+  opacity: 0.2;
+}
+
+/* Dim loses to highlight: if highlighted, don't dim */
+.slotHighlight.slotDim {
+  opacity: 1;
 }
 
 /* ---- Slot inner ---- */
@@ -85,9 +93,7 @@
   padding: 10px 10px;
 }
 
-.champSlotHeight.empty {
-  min-height: 52px;
-}
+.champSlotHeight.empty { min-height: 52px; }
 
 .seed {
   font-family: var(--font-display);
@@ -120,9 +126,7 @@
   line-height: 1.2;
 }
 
-.championship .teamName {
-  font-size: 15px;
-}
+.championship .teamName { font-size: 15px; }
 
 .ownerName {
   font-size: 10px;
@@ -142,13 +146,8 @@
   text-align: center;
 }
 
-.badgeLocked {
-  color: var(--green);
-}
-
-.badgeSim {
-  color: var(--gold);
-}
+.badgeLocked { color: var(--green); }
+.badgeSim { color: var(--gold); }
 
 .tbdLabel {
   font-family: var(--font-display);

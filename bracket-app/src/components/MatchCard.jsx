@@ -4,14 +4,9 @@ import styles from './MatchCard.module.css';
 /**
  * Renders a single match with two team slots.
  *
- * Props:
- *   match         - { matchId, team1Id, team2Id, winnerId }
- *   teamMap       - id → team object
- *   ownerMap      - id → owner object
- *   confirmedResults - raw results from JSON (not simulated)
- *   roundKey      - 'round1' | 'round2' | ... | 'championship' | 'thirdPlace'
- *   onPick(matchId, teamId|null) - called when user clicks a team
- *   isChampionship / isThirdPlace - styling flags
+ * highlightedTeams: Set<teamId> | null
+ *   When non-null, slots whose team is in the set are highlighted (bright border + glow);
+ *   slots not in the set are dimmed.
  */
 export default function MatchCard({
   match,
@@ -22,6 +17,7 @@ export default function MatchCard({
   onPick,
   isChampionship = false,
   isThirdPlace = false,
+  highlightedTeams = null,
 }) {
   if (!match) return null;
 
@@ -30,7 +26,6 @@ export default function MatchCard({
   const team1 = team1Id ? teamMap[team1Id] : null;
   const team2 = team2Id ? teamMap[team2Id] : null;
 
-  // Is the result confirmed (in the source JSON)?
   let confirmedWinnerId = null;
   if (isChampionship) {
     confirmedWinnerId = confirmedResults?.championship || null;
@@ -41,12 +36,17 @@ export default function MatchCard({
   }
 
   const isLocked = !!confirmedWinnerId;
-  const bothTeamsReady = !!team1Id && !!team2Id;
 
   function handleTeamClick(teamId) {
-    if (isLocked || !bothTeamsReady || !teamId) return;
-    // Toggle: clicking the current simulated winner clears it
+    if (isLocked || !teamId) return;
     onPick(matchId, winnerId === teamId ? null : teamId);
+  }
+
+  // Highlight logic per slot
+  function slotHighlight(teamId) {
+    if (!highlightedTeams) return 'none';        // no filter active
+    if (!teamId) return 'none';
+    return highlightedTeams.has(teamId) ? 'highlight' : 'dim';
   }
 
   return (
@@ -61,9 +61,10 @@ export default function MatchCard({
         isWinner={!!winnerId && winnerId === team1Id}
         isLoser={!!winnerId && winnerId !== team1Id && !!team1Id}
         isLocked={isLocked}
-        canClick={!isLocked && bothTeamsReady && !!team1Id}
+        canClick={!isLocked && !!team1Id}
         onClick={() => handleTeamClick(team1Id)}
         isChampionship={isChampionship}
+        highlight={slotHighlight(team1Id)}
       />
       <div className={styles.divider} />
       <TeamSlot
@@ -72,18 +73,23 @@ export default function MatchCard({
         isWinner={!!winnerId && winnerId === team2Id}
         isLoser={!!winnerId && winnerId !== team2Id && !!team2Id}
         isLocked={isLocked}
-        canClick={!isLocked && bothTeamsReady && !!team2Id}
+        canClick={!isLocked && !!team2Id}
         onClick={() => handleTeamClick(team2Id)}
         isChampionship={isChampionship}
+        highlight={slotHighlight(team2Id)}
       />
     </div>
   );
 }
 
-function TeamSlot({ team, owner, isWinner, isLoser, isLocked, canClick, onClick, isChampionship }) {
+function TeamSlot({ team, owner, isWinner, isLoser, isLocked, canClick, onClick, isChampionship, highlight }) {
+  // highlight: 'none' | 'highlight' | 'dim'
+  const isHighlighted = highlight === 'highlight';
+  const isDimmed = highlight === 'dim';
+
   if (!team) {
     return (
-      <div className={`${styles.slot} ${styles.empty} ${isChampionship ? styles.champSlotHeight : ''}`}>
+      <div className={`${styles.slot} ${styles.empty} ${isChampionship ? styles.champSlotHeight : ''} ${isDimmed ? styles.slotDim : ''}`}>
         <span className={styles.tbdLabel}>TBD</span>
       </div>
     );
@@ -97,6 +103,8 @@ function TeamSlot({ team, owner, isWinner, isLoser, isLocked, canClick, onClick,
         ${isLoser ? styles.loser : ''}
         ${canClick ? styles.clickable : ''}
         ${isChampionship ? styles.champSlotHeight : ''}
+        ${isHighlighted ? styles.slotHighlight : ''}
+        ${isDimmed ? styles.slotDim : ''}
       `}
       onClick={canClick ? onClick : undefined}
       disabled={!canClick}

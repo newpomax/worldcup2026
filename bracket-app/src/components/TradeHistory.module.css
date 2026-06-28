@@ -1,0 +1,237 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 32px;
+}
+
+/* ---- Empty state ---- */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 64px 24px;
+  color: var(--muted);
+  text-align: center;
+}
+.emptyIcon { font-size: 48px; margin-bottom: 8px; }
+.emptyHint { font-size: 12px; opacity: 0.6; margin-top: 4px; }
+.emptyHint code { background: var(--navy-light); padding: 2px 5px; border-radius: 3px; }
+
+/* ---- Timeline ---- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  margin-bottom: 40px;
+}
+
+.roundGroup {}
+
+.roundHeader {
+  margin-bottom: 12px;
+}
+
+.roundPill {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: var(--gold-faint);
+  border: 1px solid rgba(240,180,41,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+}
+
+.tradeList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Trade card ---- */
+.tradeCard {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.side {
+  flex: 1;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sideRight {
+  text-align: right;
+  align-items: flex-end;
+  background: rgba(255,255,255,0.01);
+}
+
+.sideOwner {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.sideLabel {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+
+.nothing {
+  color: var(--muted);
+  opacity: 0.4;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.sideTeams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sideRight .sideTeams {
+  justify-content: flex-end;
+}
+
+.tradeTeamPill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.07);
+  color: var(--white);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.tradePts {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+}
+.tradePtsPos { color: var(--green); }
+.tradePtsNeg { color: var(--red); }
+
+.tradeArrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  font-size: 20px;
+  color: var(--muted);
+  opacity: 0.5;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+/* ---- Current rosters ---- */
+.rosterSection {
+  border-top: 1px solid var(--border);
+  padding-top: 28px;
+}
+
+.rosterTitle {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--white);
+  margin-bottom: 16px;
+}
+
+.rosterGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.rosterCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.rosterOwner {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.rosterTeams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.rosterPill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.2px;
+}
+
+.pillWin {
+  background: rgba(240,180,41,0.12);
+  color: var(--gold);
+  border: 1px solid rgba(240,180,41,0.2);
+}
+.pillChamp {
+  background: rgba(192,132,252,0.15);
+  color: #c084fc;
+  border: 1px solid rgba(192,132,252,0.3);
+}
+.pillThird {
+  background: rgba(45,206,137,0.12);
+  color: var(--green);
+  border: 1px solid rgba(45,206,137,0.2);
+}
+.pillElim {
+  background: rgba(255,255,255,0.04);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  opacity: 0.5;
+}
+
+.noTeams {
+  font-size: 11px;
+  color: var(--muted);
+  opacity: 0.4;
+  font-style: italic;
+}

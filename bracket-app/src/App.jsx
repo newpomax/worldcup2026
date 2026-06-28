@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { buildBracket, applyPick } from './bracketLogic';
 import BracketView from './components/BracketView';
 import Leaderboard from './components/Leaderboard';
+import TradeHistory from './components/TradeHistory';
 import styles from './App.module.css';
 
 export default function App() {
@@ -10,8 +11,8 @@ export default function App() {
   const [simulatedResults, setSimulatedResults] = useState(null);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('bracket');
+  const [selectedOwner, setSelectedOwner] = useState(null);
 
-  // Load bracket JSON
   useEffect(() => {
     fetch(`${import.meta.env.BASE_URL}bracket.json`)
       .then(r => {
@@ -28,7 +29,6 @@ export default function App() {
 
   const handlePick = useCallback((matchId, winnerId) => {
     if (!rawData || !simulatedResults) return;
-    // Build a bracketState snapshot for invalidation logic
     const state = buildBracket(rawData, simulatedResults);
     const next = applyPick(simulatedResults, matchId, winnerId, rawData, state);
     setSimulatedResults(next);
@@ -37,6 +37,10 @@ export default function App() {
   const handleReset = useCallback(() => {
     if (confirmedResults) setSimulatedResults(JSON.parse(JSON.stringify(confirmedResults)));
   }, [confirmedResults]);
+
+  const handleSelectOwner = useCallback((ownerId) => {
+    setSelectedOwner(prev => prev === ownerId ? null : ownerId);
+  }, []);
 
   const hasSimulation = simulatedResults && confirmedResults &&
     JSON.stringify(simulatedResults) !== JSON.stringify(confirmedResults);
@@ -61,6 +65,7 @@ export default function App() {
   }
 
   const bracketState = buildBracket(rawData, simulatedResults);
+  const tradeCount = (rawData.trades || []).length;
 
   return (
     <div className={styles.app}>
@@ -85,6 +90,13 @@ export default function App() {
                 className={`${styles.tab} ${activeTab === 'standings' ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab('standings')}
               >Standings</button>
+              <button
+                className={`${styles.tab} ${activeTab === 'trades' ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab('trades')}
+              >
+                Trades
+                {tradeCount > 0 && <span className={styles.tabBadge}>{tradeCount}</span>}
+              </button>
             </div>
             {hasSimulation && (
               <button className={styles.resetBtn} onClick={handleReset}>
@@ -102,18 +114,44 @@ export default function App() {
 
       <main className={styles.main}>
         {activeTab === 'bracket' ? (
-          <BracketView
-            rawData={rawData}
-            bracketState={bracketState}
-            simulatedResults={simulatedResults}
-            confirmedResults={confirmedResults}
-            onPick={handlePick}
-          />
-        ) : (
+          <>
+            <Leaderboard
+              rawData={rawData}
+              bracketState={bracketState}
+              hasSimulation={hasSimulation}
+              selectedOwner={selectedOwner}
+              onSelectOwner={handleSelectOwner}
+            />
+            <div className={styles.bracketDivider}>
+              {selectedOwner && (
+                <span className={styles.filterNote}>
+                  Showing teams for <strong>{bracketState.ownerMap[selectedOwner]?.name}</strong>
+                  <button className={styles.clearFilter} onClick={() => setSelectedOwner(null)}>✕ clear</button>
+                </span>
+              )}
+            </div>
+            <BracketView
+              rawData={rawData}
+              bracketState={bracketState}
+              simulatedResults={simulatedResults}
+              confirmedResults={confirmedResults}
+              onPick={handlePick}
+              selectedOwner={selectedOwner}
+            />
+          </>
+        ) : activeTab === 'standings' ? (
           <Leaderboard
             rawData={rawData}
             bracketState={bracketState}
             hasSimulation={hasSimulation}
+            selectedOwner={null}
+            onSelectOwner={() => {}}
+            fullPage
+          />
+        ) : (
+          <TradeHistory
+            rawData={rawData}
+            bracketState={bracketState}
           />
         )}
       </main>

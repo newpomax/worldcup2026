@@ -1,22 +1,20 @@
 import React from 'react';
-import { getRoundLabel } from '../bracketLogic';
+import { getRoundLabel, getEverOwnedTeams } from '../bracketLogic';
 import MatchCard from './MatchCard';
 import styles from './BracketView.module.css';
 
-/**
- * Full bracket layout. 32 teams, 4 rounds + championship + 3rd place.
- *
- * Visual structure (left to right):
- *   [R1 top 8] [R2 top 4] [R3 top 2] [R4 top semi] [CHAMP] [R4 bot semi] [R3 bot 2] [R2 bot 4] [R1 bot 8]
- *                                                            [3RD PLACE]
- *
- * Each column's matches are vertically centered in their slot groups.
- * The number of slots per column = 8 (half of 16 R1 matches).
- */
+const SLOT_HEIGHT = 100;
+const HALF_SLOTS = 8;
+const COL_HEIGHT = HALF_SLOTS * SLOT_HEIGHT;
+const COL_WIDTH = 196;
+const OVERLAP = 40; // px overlap applied from QF (rIdx >= 2) onward
 
-const SLOT_HEIGHT = 100; // px - height of one "slot" (one R1 match position)
-const HALF_SLOTS = 8;    // 8 R1 matches per half-bracket
-const COL_HEIGHT = HALF_SLOTS * SLOT_HEIGHT; // 800px
+// Returns the negative margin to pull a left-side column back over the previous one.
+// rIdx is the round index (0=R1, 1=R2, 2=QF, 3=SF).
+// Right-side columns are rendered R4→R1, so their overlap is mirrored.
+function colOverlap(rIdx) {
+  return rIdx >= 2 ? -OVERLAP : 0;
+}
 
 export default function BracketView({
   rawData,
@@ -24,46 +22,43 @@ export default function BracketView({
   simulatedResults,
   confirmedResults,
   onPick,
+  selectedOwner,
 }) {
   const { teamMap, ownerMap, rounds, thirdPlaceMatch, champMatch } = bracketState;
 
-  // Split each round into top/bottom halves
-  // rounds[0] has 16 matches → top: 0..7, bottom: 8..15
-  // rounds[1] has 8 matches  → top: 0..3, bottom: 4..7
-  // rounds[2] has 4 matches  → top: 0..1, bottom: 2..3
-  // rounds[3] has 2 matches  → top: [0],  bottom: [1]
+  // Compute the set of team IDs ever owned by the selected owner (for highlighting)
+  const highlightedTeams = selectedOwner
+    ? getEverOwnedTeams(rawData, selectedOwner)
+    : null;
+
   const halves = rounds.map(r => ({
     top: r.slice(0, r.length / 2),
     bottom: r.slice(r.length / 2),
   }));
 
   const roundKeys = ['round1', 'round2', 'round3', 'round4'];
-
-  // The top bracket reads left→right, bottom bracket reads right→left visually,
-  // but we render them in the same column order
   const roundLabels = rounds.map((_, i) => getRoundLabel(i));
+
+  const sharedProps = { teamMap, ownerMap, confirmedResults, onPick, highlightedTeams };
 
   return (
     <div className={styles.container}>
       <div className={styles.bracketScroll}>
 
-        {/* Column headers row */}
+        {/* Column headers */}
         <div className={styles.headers}>
-          {/* Left side: rounds in order R1→R4 */}
           {rounds.map((_, i) => (
-            <div key={`lh-${i}`} className={styles.headerCell} style={{ width: COL_WIDTH(i) }}>
+            <div key={`lh-${i}`} className={styles.headerCell} style={{ width: COL_WIDTH, marginLeft: colOverlap(i), flexShrink: 0 }}>
               {roundLabels[i]}
             </div>
           ))}
-          {/* Center */}
-          <div className={`${styles.headerCell} ${styles.headerCenter}`} style={{ width: 220 }}>
+          <div className={`${styles.headerCell} ${styles.headerCenter}`} style={{ width: 220, flexShrink: 0, marginLeft: -98, marginRight: -98 }}>
             Final
           </div>
-          {/* Right side: rounds in reverse order R4→R1 */}
           {[...rounds].reverse().map((_, i) => {
             const rIdx = rounds.length - 1 - i;
             return (
-              <div key={`rh-${rIdx}`} className={styles.headerCell} style={{ width: COL_WIDTH(rIdx) }}>
+              <div key={`rh-${rIdx}`} className={styles.headerCell} style={{ width: COL_WIDTH, marginRight: colOverlap(rIdx), flexShrink: 0 }}>
                 {roundLabels[rIdx]}
               </div>
             );
@@ -73,64 +68,58 @@ export default function BracketView({
         {/* Bracket body */}
         <div className={styles.body}>
 
-          {/* Left side: top half, R1→R4 */}
+          {/* Left side: top half R1→R4 */}
           {rounds.map((_, rIdx) => (
             <RoundColumn
               key={`left-${rIdx}`}
               matches={halves[rIdx].top}
               totalSlots={HALF_SLOTS}
-              teamMap={teamMap}
-              ownerMap={ownerMap}
-              confirmedResults={confirmedResults}
               roundKey={roundKeys[rIdx]}
-              onPick={onPick}
-              width={COL_WIDTH(rIdx)}
+              width={COL_WIDTH}
+              marginLeft={colOverlap(rIdx)}
+              zIndex={rIdx + 1}
+              {...sharedProps}
             />
           ))}
 
-          {/* Center: Championship + 3rd place */}
+          {/* Center */}
           <div className={styles.centerCol}>
             <div className={styles.centerTop}>
               <div className={styles.centerLabel}>Championship</div>
               <MatchCard
                 match={champMatch}
-                teamMap={teamMap}
-                ownerMap={ownerMap}
-                confirmedResults={confirmedResults}
                 roundKey="championship"
-                onPick={onPick}
                 isChampionship
+                {...sharedProps}
               />
             </div>
             <div className={styles.centerBottom}>
               <div className={styles.thirdPlaceLabel}>3rd Place</div>
               <MatchCard
                 match={thirdPlaceMatch}
-                teamMap={teamMap}
-                ownerMap={ownerMap}
-                confirmedResults={confirmedResults}
                 roundKey="thirdPlace"
-                onPick={onPick}
                 isThirdPlace
+                {...sharedProps}
               />
             </div>
           </div>
 
-          {/* Right side: bottom half, R4→R1 */}
+          {/* Right side: bottom half R4→R1 */}
           {[...rounds].reverse().map((_, i) => {
             const rIdx = rounds.length - 1 - i;
+            // Right side renders R4 first (i=0,rIdx=3) → R1 last (i=3,rIdx=0)
+            // Overlap applies when rIdx >= 2 (QF and SF), same threshold as left side
             return (
               <RoundColumn
                 key={`right-${rIdx}`}
                 matches={halves[rIdx].bottom}
                 totalSlots={HALF_SLOTS}
-                teamMap={teamMap}
-                ownerMap={ownerMap}
-                confirmedResults={confirmedResults}
                 roundKey={roundKeys[rIdx]}
-                onPick={onPick}
-                width={COL_WIDTH(rIdx)}
+                width={COL_WIDTH}
+                marginRight={colOverlap(rIdx)}
+                zIndex={rIdx + 1}
                 flip
+                {...sharedProps}
               />
             );
           })}
@@ -142,25 +131,22 @@ export default function BracketView({
   );
 }
 
-// Column width narrows as rounds progress (more breathing room)
-function COL_WIDTH(roundIndex) {
-  return 196;
-}
-
-/**
- * A single vertical column of matches.
- * Matches are centered within their slot groups.
- * totalSlots = 8 (half of round-1 matches).
- * As round advances, slotsPerMatch doubles.
- */
-function RoundColumn({ matches, totalSlots, teamMap, ownerMap, confirmedResults, roundKey, onPick, width, flip }) {
+function RoundColumn({ matches, totalSlots, teamMap, ownerMap, confirmedResults, roundKey, onPick, highlightedTeams, width, flip, marginLeft = 0, marginRight = 0, zIndex = 1 }) {
   const slotsPerMatch = totalSlots / matches.length;
 
   return (
-    <div className={styles.roundCol} style={{ width, height: COL_HEIGHT, position: 'relative', flexShrink: 0 }}>
+    <div style={{
+      width,
+      height: COL_HEIGHT,
+      position: 'relative',
+      flexShrink: 0,
+      marginLeft,
+      marginRight,
+      zIndex,
+    }}>
       {matches.map((match, i) => {
-        const groupCenter = (i + 0.5) * slotsPerMatch; // in slot units
-        const topPx = (groupCenter - 0.5) * SLOT_HEIGHT; // center a single card (1 slot tall)
+        const groupCenter = (i + 0.5) * slotsPerMatch;
+        const topPx = (groupCenter - 0.5) * SLOT_HEIGHT;
         return (
           <div
             key={match.matchId}
@@ -178,6 +164,7 @@ function RoundColumn({ matches, totalSlots, teamMap, ownerMap, confirmedResults,
               confirmedResults={confirmedResults}
               roundKey={roundKey}
               onPick={onPick}
+              highlightedTeams={highlightedTeams}
             />
           </div>
         );
@@ -193,7 +180,7 @@ function PointsLegend() {
       <span className={styles.legendItem}><span className={styles.dot} style={{ background: 'var(--gold)' }} /> Each win: +1 pt</span>
       <span className={styles.legendItem}><span className={styles.dot} style={{ background: '#c084fc' }} /> Championship win: +2 pts (win + bonus)</span>
       <span className={styles.legendItem}><span className={styles.dot} style={{ background: 'var(--green)' }} /> 3rd place win: +0.5 pts</span>
-      <span className={styles.legendHint}>Click any team in an upcoming match to simulate a winner</span>
+      <span className={styles.legendHint}>Click any team in an upcoming match to simulate a winner · Click an owner above to highlight their teams</span>
     </div>
   );
 }

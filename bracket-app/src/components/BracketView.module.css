@@ -54,6 +54,10 @@
   width: 220px;
   flex-shrink: 0;
   height: 800px; /* COL_HEIGHT */
+  margin-left: -98px;
+  margin-right: -98px;
+  position: relative;
+  z-index: 10;
 }
 
 .centerTop {

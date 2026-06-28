@@ -1,21 +1,75 @@
 /**
  * Builds a full bracket state from raw JSON data + current results (confirmed or simulated).
  *
- * Round structure (32 teams, single elimination):
- *   Round 1 (index 0): 16 matches → 16 winners
- *   Round 2 (index 1): 8 matches  → 8 winners  (R16)
- *   Round 3 (index 2): 4 matches  → 4 winners  (QF)
- *   Round 4 (index 3): 2 matches  → 2 winners  (SF) → losers → 3rd place
- *                                                   → winners → Championship
+ * Trades:
+ *   Each trade has { partyA: {owner, teams_given, points_given}, partyB: {...}, round }
+ *   "round" = the round before which the trade takes effect (1 = before R1, 2 = before R2, etc.)
+ *   Special values: "thirdPlace", "championship"
  *
- * Points:
- *   Each win (any round): +1
+ * Round order for trade application: 1, 2, 3, 4, thirdPlace, championship
+ * We apply all trades whose round <= current bracket progress.
+ *
+ * Points scoring:
+ *   Each win (rounds 1–4): +1 to the team's owner AT THE TIME of that match
  *   3rd place win: +0.5
- *   Championship win: +1 (the win) + 1 (bonus) = winner gets +2 for that match
- *   (we award +1 in the general loop, then +1 bonus separately)
+ *   Championship win: +2 (win + bonus)
+ *   Points transfers from trades also apply.
  */
 
 const ROUND_KEYS = ['round1', 'round2', 'round3', 'round4'];
+
+// Round order for trade sequencing
+const ROUND_ORDER = [1, 2, 3, 4, 'thirdPlace', 'championship'];
+
+function roundToOrder(r) {
+  const i = ROUND_ORDER.indexOf(r);
+  return i === -1 ? 999 : i;
+}
+
+/**
+ * Compute effective team→owner mapping after applying all trades up to (but not including)
+ * the given round. Also returns the net points transferred per owner.
+ *
+ * @param {object} data - raw JSON data
+ * @param {number|string} beforeRound - apply trades with round < beforeRound (in ROUND_ORDER)
+ * @returns {{ teamOwner: {teamId: ownerId}, pointsTransfers: {ownerId: number} }}
+ */
+export function applyTradesUpTo(data, beforeRound) {
+  // Start with original ownership
+  const teamOwner = {};
+  data.teams.forEach(t => { teamOwner[t.id] = t.owner; });
+
+  const pointsTransfers = {};
+  data.owners.forEach(o => { pointsTransfers[o.id] = 0; });
+
+  const trades = data.trades || [];
+  const cutoff = roundToOrder(beforeRound);
+
+  // Sort trades by round order, then apply sequentially
+  const sorted = [...trades].sort((a, b) => roundToOrder(a.round) - roundToOrder(b.round));
+
+  for (const trade of sorted) {
+    if (roundToOrder(trade.round) > cutoff) continue;
+
+    const { partyA, partyB } = trade;
+
+    // Transfer teams: A gives to B, B gives to A
+    (partyA.teams_given || []).forEach(teamId => {
+      teamOwner[teamId] = partyB.owner;
+    });
+    (partyB.teams_given || []).forEach(teamId => {
+      teamOwner[teamId] = partyA.owner;
+    });
+
+    // Transfer points: A gives points to B, B gives points to A
+    const aGives = partyA.points_given || 0;
+    const bGives = partyB.points_given || 0;
+    pointsTransfers[partyA.owner] = (pointsTransfers[partyA.owner] || 0) - aGives + bGives;
+    pointsTransfers[partyB.owner] = (pointsTransfers[partyB.owner] || 0) - bGives + aGives;
+  }
+
+  return { teamOwner, pointsTransfers };
+}
 
 export function buildBracket(data, results) {
   const teamMap = {};
@@ -24,7 +78,7 @@ export function buildBracket(data, results) {
   const ownerMap = {};
   data.owners.forEach(o => { ownerMap[o.id] = { ...o }; });
 
-  const rounds = []; // rounds[0..3], each is array of matches
+  const rounds = [];
 
   // ---- Round 1 ----
   rounds.push(
@@ -36,7 +90,7 @@ export function buildBracket(data, results) {
     }))
   );
 
-  // ---- Rounds 2-4: derived from prev round winners ----
+  // ---- Rounds 2–4 ----
   for (let r = 1; r < 4; r++) {
     const prev = rounds[r - 1];
     const rKey = ROUND_KEYS[r];
@@ -52,65 +106,114 @@ export function buildBracket(data, results) {
     rounds.push(matches);
   }
 
-  // rounds[3] = semifinals (2 matches)
   const [semi1, semi2] = rounds[3];
 
-  // ---- Championship: winners of both semis ----
+  // ---- Championship ----
   const champTeam1 = semi1?.winnerId || null;
   const champTeam2 = semi2?.winnerId || null;
-  const champWinnerId = (champTeam1 || champTeam2) ? (results?.championship || null) : null;
   const champMatch = {
     matchId: 'championship',
     team1Id: champTeam1,
     team2Id: champTeam2,
-    winnerId: champWinnerId,
+    winnerId: (champTeam1 || champTeam2) ? (results?.championship || null) : null,
   };
 
-  // ---- 3rd Place: losers of both semis ----
+  // ---- 3rd Place ----
   function getSemiLoser(semi) {
-    if (!semi?.team1Id || !semi?.team2Id) return null;
-    if (!semi.winnerId) return null;
+    if (!semi?.team1Id || !semi?.team2Id || !semi.winnerId) return null;
     return semi.winnerId === semi.team1Id ? semi.team2Id : semi.team1Id;
   }
   const thirdTeam1 = getSemiLoser(semi1);
   const thirdTeam2 = getSemiLoser(semi2);
-  const thirdWinnerId = (thirdTeam1 || thirdTeam2) ? (results?.thirdPlace || null) : null;
   const thirdPlaceMatch = {
     matchId: 'thirdPlace',
     team1Id: thirdTeam1,
     team2Id: thirdTeam2,
-    winnerId: thirdWinnerId,
+    winnerId: (thirdTeam1 || thirdTeam2) ? (results?.thirdPlace || null) : null,
   };
 
-  // ---- Compute owner points ----
+  // ---- Compute owner points with trade-aware ownership ----
+  // Start everyone at initialPoints
   const ownerPoints = {};
-  data.owners.forEach(o => { ownerPoints[o.id] = o.initialPoints; });
+  const ownerInitialPoints = {}
+  data.owners.forEach(o => { 
+    ownerInitialPoints[o.id] = o.initialPoints;
+    ownerPoints[o.id] = o.initialPoints;
+  });
 
-  function awardPoints(teamId, pts) {
-    if (!teamId) return;
-    const team = teamMap[teamId];
-    if (!team) return;
-    ownerPoints[team.owner] = (ownerPoints[team.owner] || 0) + pts;
-  }
+  // Apply points transfers from ALL trades (all rounds)
+  const { pointsTransfers: allTransfers } = applyTradesUpTo(data, 999);
+  const ownerTransferredPoints = {};
+  data.owners.forEach(o => {
+    ownerTransferredPoints[o.id] = (allTransfers[o.id] || 0);
+    ownerPoints[o.id] += (allTransfers[o.id] || 0);
+  });
 
-  // Regular round wins (rounds 1–4) — +1 each
-  rounds.forEach(roundMatches => {
+  // Award win points using trade-aware ownership per round
+  // Round r+1 uses ownership state "before round r+1"
+  rounds.forEach((roundMatches, rIdx) => {
+    const roundNum = rIdx + 1; // 1-indexed
+    const { teamOwner } = applyTradesUpTo(data, roundNum);
     roundMatches.forEach(m => {
-      if (m.winnerId) awardPoints(m.winnerId, 1);
+      if (!m.winnerId) return;
+      const effectiveOwner = teamOwner[m.winnerId];
+      if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 1;
     });
   });
 
-  // 3rd place: +0.5
-  if (thirdPlaceMatch.winnerId) awardPoints(thirdPlaceMatch.winnerId, 0.5);
+  // 3rd place — uses ownership state before 'thirdPlace'
+  if (thirdPlaceMatch.winnerId) {
+    const { teamOwner } = applyTradesUpTo(data, 'thirdPlace');
+    const effectiveOwner = teamOwner[thirdPlaceMatch.winnerId];
+    if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 0.5;
+  }
 
-  // Championship: +1 (win) + 1 (bonus) = +2 total for that match
-  if (champMatch.winnerId) awardPoints(champMatch.winnerId, 2);
+  // Championship — uses ownership state before 'championship'
+  if (champMatch.winnerId) {
+    const { teamOwner } = applyTradesUpTo(data, 'championship');
+    const effectiveOwner = teamOwner[champMatch.winnerId];
+    if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 2;
+  }
+
+  // ---- Current team rosters (after all trades) ----
+  const { teamOwner: currentOwnership } = applyTradesUpTo(data, 999);
+  const ownerTeams = {};
+  data.owners.forEach(o => { ownerTeams[o.id] = []; });
+  data.teams.forEach(t => {
+    const currentOwner = currentOwnership[t.id] || t.owner;
+    if (ownerTeams[currentOwner]) ownerTeams[currentOwner].push({ ...t });
+  });
+
+  // ---- Count wins per team (for display) ----
+  const teamWins = {};
+  const teamIsChamp = {};
+  const teamIsThird = {};
+
+  const allMatchesFlat = [...rounds.flat(), thirdPlaceMatch, champMatch];
+  allMatchesFlat.forEach(m => {
+    if (!m?.winnerId) return;
+    if (m.matchId === 'championship') {
+      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 2;
+      teamIsChamp[m.winnerId] = true;
+    } else if (m.matchId === 'thirdPlace') {
+      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 0.5;
+      teamIsThird[m.winnerId] = true;
+    } else {
+      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 1;
+    }
+  });
 
   return {
     teamMap,
     ownerMap,
+    ownerInitialPoints,
     ownerPoints,
-    rounds,         // 4 rounds of the elimination bracket
+    ownerTransferredPoints,
+    ownerTeams,       // current rosters post-trades
+    teamWins,         // teamId → points earned
+    teamIsChamp,
+    teamIsThird,
+    rounds,
     thirdPlaceMatch,
     champMatch,
   };
@@ -121,28 +224,23 @@ export function getRoundLabel(roundIndex) {
   return labels[roundIndex] || `Round ${roundIndex + 1}`;
 }
 
-/**
- * Apply a simulated pick, clearing any downstream picks now invalidated.
- */
+export function getRoundLabelByKey(key) {
+  const map = {
+    1: 'Round of 32', 2: 'Round of 16', 3: 'Quarterfinals',
+    4: 'Semifinals', thirdPlace: '3rd Place', championship: 'Championship',
+  };
+  return map[key] || `Round ${key}`;
+}
+
 export function applyPick(results, matchId, winnerId, data, bracketState) {
   const next = JSON.parse(JSON.stringify(results));
 
-  if (matchId === 'thirdPlace') {
-    next.thirdPlace = winnerId || null;
-    return next;
-  }
-  if (matchId === 'championship') {
-    next.championship = winnerId || null;
-    return next;
-  }
+  if (matchId === 'thirdPlace') { next.thirdPlace = winnerId || null; return next; }
+  if (matchId === 'championship') { next.championship = winnerId || null; return next; }
 
-  // Find which round this match belongs to
   let roundIndex = -1;
   for (let r = 0; r < bracketState.rounds.length; r++) {
-    if (bracketState.rounds[r].some(m => m.matchId === matchId)) {
-      roundIndex = r;
-      break;
-    }
+    if (bracketState.rounds[r].some(m => m.matchId === matchId)) { roundIndex = r; break; }
   }
   if (roundIndex === -1) return next;
 
@@ -150,13 +248,8 @@ export function applyPick(results, matchId, winnerId, data, bracketState) {
   if (!next[rKey]) next[rKey] = {};
 
   const oldWinner = next[rKey][matchId] || null;
-  if (winnerId) {
-    next[rKey][matchId] = winnerId;
-  } else {
-    delete next[rKey][matchId];
-  }
+  if (winnerId) { next[rKey][matchId] = winnerId; } else { delete next[rKey][matchId]; }
 
-  // Invalidate downstream if winner changed
   if (oldWinner && oldWinner !== winnerId) {
     clearDownstream(next, matchId, oldWinner, roundIndex, bracketState);
   }
@@ -168,11 +261,9 @@ function clearDownstream(results, matchId, lostTeamId, roundIndex, bracketState)
   const nextRoundIndex = roundIndex + 1;
 
   if (nextRoundIndex < bracketState.rounds.length) {
-    // Find match position in current round
     const posInRound = bracketState.rounds[roundIndex].findIndex(m => m.matchId === matchId);
     const nextMatchIdx = Math.floor(posInRound / 2);
     const nextMatch = bracketState.rounds[nextRoundIndex]?.[nextMatchIdx];
-
     if (nextMatch) {
       const nextRKey = ROUND_KEYS[nextRoundIndex];
       const nextWinner = results[nextRKey]?.[nextMatch.matchId];
@@ -184,17 +275,45 @@ function clearDownstream(results, matchId, lostTeamId, roundIndex, bracketState)
     }
   }
 
-  // Semifinals (index 3) losers go to 3rd place
-  if (nextRoundIndex === 3) {
-    // The old winner might have been the semi loser heading to 3rd — but that
-    // case is: if lostTeamId was about to be a semi-loser picked for 3rd
-    // We handle this by clearing 3rd place if lostTeamId is currently the 3rd place winner
-    if (results.thirdPlace === lostTeamId) results.thirdPlace = null;
-  }
-
-  // Semi winners go to champ
   if (nextRoundIndex >= 3) {
     if (results.championship === lostTeamId) results.championship = null;
     if (results.thirdPlace === lostTeamId) results.thirdPlace = null;
   }
+}
+
+/**
+ * Returns the set of team IDs that were ever owned by `ownerId` at any point
+ * (original ownership OR via trades). Used for bracket highlighting.
+ */
+export function getEverOwnedTeams(data, ownerId) {
+  const owned = new Set();
+
+  // Original ownership
+  data.teams.forEach(t => {
+    if (t.owner === ownerId) owned.add(t.id);
+  });
+
+  // Teams received via trades
+  (data.trades || []).forEach(trade => {
+    // partyA gives teams_given → those go to partyB
+    // partyB gives teams_given → those go to partyA
+    if (trade.partyB.owner === ownerId) {
+      (trade.partyA.teams_given || []).forEach(tid => owned.add(tid));
+    }
+    if (trade.partyA.owner === ownerId) {
+      (trade.partyB.teams_given || []).forEach(tid => owned.add(tid));
+    }
+  });
+
+  return owned;
+}
+
+/**
+ * For a given team appearing in a specific round, returns who owned it at that point.
+ * roundKey: 'round1'|'round2'|'round3'|'round4'|'thirdPlace'|'championship'
+ */
+export function getTeamOwnerAtRound(data, teamId, roundKey) {
+  const roundNum = { round1: 1, round2: 2, round3: 3, round4: 4, thirdPlace: 'thirdPlace', championship: 'championship' }[roundKey];
+  const { teamOwner } = applyTradesUpTo(data, roundNum);
+  return teamOwner[teamId] || null;
 }
