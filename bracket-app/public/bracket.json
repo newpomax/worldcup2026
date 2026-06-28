@@ -4,11 +4,11 @@
     "season": "2025–26"
   },
   "owners": [
+    { "id": "danny",   "name": "Danny",   "initialPoints": 5.0 },
+    { "id": "danya",   "name": "Danya",   "initialPoints": 4.5 },
     { "id": "jack",    "name": "Jack",    "initialPoints": 4.5 },
-    { "id": "danny",   "name": "Danny",   "initialPoints": 4.0 },
     { "id": "max",     "name": "Max",     "initialPoints": 4.0 },
     { "id": "gabe",    "name": "Gabe",    "initialPoints": 4.0 },
-    { "id": "danya",   "name": "Danya",   "initialPoints": 3.5 },
     { "id": "ro",      "name": "Ro",      "initialPoints": 3.0 },
     { "id": "ricky",   "name": "Ricky",   "initialPoints": 3.0 },
     { "id": "bella",   "name": "Bella",   "initialPoints": 2.0 },

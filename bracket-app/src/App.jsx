@@ -13,7 +13,7 @@ export default function App() {
 
   // Load bracket JSON
   useEffect(() => {
-    fetch('/bracket.json')
+    fetch(`${import.meta.env.BASE_URL}bracket.json`)
       .then(r => {
         if (!r.ok) throw new Error(`Failed to load bracket.json (${r.status})`);
         return r.json();
