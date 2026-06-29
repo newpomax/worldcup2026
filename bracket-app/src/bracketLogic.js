@@ -218,6 +218,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
   const allMatchesFlat = [...rounds.flat(), thirdPlaceMatch, champMatch];
   data.teams.forEach(t => {
     teamElimed[t.id] = true;
+    teamSimElimed[t.id] = true;
   });
   allMatchesFlat.forEach(m => {
     teamElimed[m.team1Id] = false;
