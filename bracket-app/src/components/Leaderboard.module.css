@@ -33,6 +33,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 8px;
+  align-items: start;
 }
 
 .gridFull {
@@ -60,6 +61,10 @@
   -webkit-appearance: none;
   margin: 0;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  vertical-align: top;
 }
 
 .card:hover {

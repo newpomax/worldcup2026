@@ -109,6 +109,11 @@
         "round": 1,
         "partyA": { "owner": "jack", "teams_given": ["scotland"], "points_given": 0 },
         "partyB": { "owner": "bella",   "teams_given": ["paraguay"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "gabe", "teams_given": ["ivory_coast"], "points_given": 0 },
+        "partyB": { "owner": "max",   "teams_given": ["senegal"], "points_given": 0 }
       }
   ]
 }
