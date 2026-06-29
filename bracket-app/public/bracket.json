@@ -24,7 +24,7 @@
     { "id": "morocco",  "name": "🇲🇦 Morocco",  "owner": "max"  },
     { "id": "usa",  "name": "🇺🇸 USA",  "owner": "danya"  },
     { "id": "australia",  "name": "🇦🇺 Australia",  "owner": "ro"  },
-    { "id": "paraguay",  "name": "🇵🇾 Paraguay",  "owner": "jack"    },
+    { "id": "paraguay",  "name": "🇵🇾 Paraguay",  "owner": "bella"    },
     { "id": "germany",  "name": "🇩🇪 Germany",  "owner": "carol"  },
     { "id": "ivory_coast",  "name": "🇨🇮 Ivory Coast",  "owner": "gabe"   },
     { "id": "ecuador",  "name": "🇪🇨 Ecuador",  "owner": "ricky"    },
@@ -47,8 +47,22 @@
     { "id": "ghana",  "name": "🇬🇭 Ghana",  "owner": "jack"  },
     { "id": "algeria",  "name": "🇩🇿 Algeria",  "owner": "danny"  },
     { "id": "austria",  "name": "🇦🇹 Austria",  "owner": "danya"  },
-    { "id": "new_zealand",  "name": "🇮🇳 New Zealand",  "owner": "danya"  },
-    { "id": "scotland",  "name": "🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",  "owner": "jack"  }
+    { "id": "scotland",  "name": "🏴󠁧󠁢󠁳󠁣󠁴󠁿 Scotland",  "owner": "jack"  },
+    { "id": "new_zealand", "name": "🇳🇿 New Zealand", "owner": "danya" },
+    { "id": "tunisia", "name": "🇹🇳 Tunisia", "owner": "ricky" },
+    { "id": "iran", "name": "🇮🇷 Iran", "owner": "ricky" },
+    { "id": "panama", "name": "🇵🇦 Panama", "owner": "max" },
+    { "id": "uruguay", "name": "🇺🇾 Uruguay", "owner": "bella" },
+    { "id": "turkey", "name": "🇹🇷 Turkey", "owner": "bella" },
+    { "id": "south_korea", "name": "🇰🇷 South Korea", "owner": "carol" },
+    { "id": "czech_republic", "name": "🇨🇿 Czech Republic", "owner": "carol" },
+    { "id": "iraq", "name": "🇮🇶 Iraq", "owner": "carol" },
+    { "id": "uzbekistan", "name": "🇺🇿 Uzbekistan", "owner": "carol" },
+    { "id": "jordan", "name": "🇯🇴 Jordan", "owner": "danya" },
+    { "id": "qatar", "name": "🇶🇦 Qatar", "owner": "ro" },
+    { "id": "haiti", "name": "🇭🇹 Haiti", "owner": "ro" },
+    { "id": "curacao", "name": "🇨🇼 Curaçao", "owner": "ro" },
+    { "id": "saudi_arabia", "name": "🇸🇦 Saudi Arabia", "owner": "gabe" }
   ],
   "bracket": {
     "round1": [

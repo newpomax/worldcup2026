@@ -24,8 +24,7 @@ export default function MatchCard({
   if (!match) return null;
 
   const { matchId, team1Id, team2Id, winnerId } = match;
-  const roundNum = Number(matchId.split('m')[0]?.replace(/r/g, '')) || 0;
-  console.log(`Round Num: ${roundNum}`);
+  const roundNum = matchId == 'championship' || matchId == 'thirdPlace' ? 5 : Number(matchId.split('m')[0]?.replace(/r/g, '')) || 0;
 
   const team1 = team1Id ? teamMap[team1Id] : null;
   const team2 = team2Id ? teamMap[team2Id] : null;
@@ -55,8 +54,6 @@ export default function MatchCard({
   const effectiveOwnerMap = postTradeOwnerMap[roundNum] ?? {};
   const team1Owner = effectiveOwnerMap[team1Id];
   const team2Owner = effectiveOwnerMap[team2Id];
-  console.log(`${team1Id}: ${effectiveOwnerMap[team1Id]}`);
-  console.log(`${team2Id}: ${effectiveOwnerMap[team2Id]}`);
 
   return (
     <div className={`

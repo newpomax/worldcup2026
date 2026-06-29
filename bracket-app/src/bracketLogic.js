@@ -103,7 +103,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
       const team1Id = prev[i]?.winnerId || null;
       const team2Id = prev[i + 1]?.winnerId || null;
       const winnerId = (team1Id || team2Id) ? (roundSimulatedRes[matchId] || null) : null;
-      const isSimulated = !Object.hasOwn(roundConfirmedRes, matchId);
+      const isSimulated = roundConfirmedRes[matchId] == null;
       matches.push({ matchId, team1Id, team2Id, winnerId, isSimulated });
     }
     rounds.push(matches);
@@ -119,7 +119,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     team1Id: champTeam1,
     team2Id: champTeam2,
     winnerId: (champTeam1 || champTeam2) ? (simulatedResults?.championship || null) : null,
-    isSimulated: !Object.hasOwn(confirmedResults || {}, "championship")
+    isSimulated: confirmedResults.championship == null
   };
 
   // ---- 3rd Place ----
@@ -134,12 +134,12 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     team1Id: thirdTeam1,
     team2Id: thirdTeam2,
     winnerId: (thirdTeam1 || thirdTeam2) ? (simulatedResults?.thirdPlace || null) : null,
-    isSimulated: !Object.hasOwn(confirmedResults || {}, "thirdPlace")
+    isSimulated: confirmedResults.thirdPlace == null
   };
 
   // --- Compute owner after trades ----
   const postTradeOwnerMap = {}; // map of round number to { team: owner } map
-  for (let r = 1; r < 4; r++) {
+  for (let r = 1; r < 6; r++) {
     const { teamOwner } = applyTradesUpTo(data, r);
     postTradeOwnerMap[r] = teamOwner;
   }
@@ -174,7 +174,6 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
       }
     });
   });
-  console.log(`postTradeOwner: ${postTradeOwnerMap}`)
 
   // 3rd place — uses ownership state before 'thirdPlace'
   if (thirdPlaceMatch.winnerId) {
@@ -210,7 +209,8 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
   });
 
   // ---- Count wins per team (for display) ----
-  const teamWins = {};
+  const teamSimulatedPts = {};
+  const teamSimElimed = {};
   const teamElimed = {};
   const teamIsChamp = {};
   const teamIsThird = {};
@@ -222,21 +222,30 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
   allMatchesFlat.forEach(m => {
     teamElimed[m.team1Id] = false;
     teamElimed[m.team2Id] = false;
+    teamSimElimed[m.team1Id] = false;
+    teamSimElimed[m.team2Id] = false;
     if (!m?.winnerId) return;
     const losingTeamId = m.team1Id == m.winnerId? m.team2Id : m.team1Id;
-    teamElimed[m.winnerId] = false;
-    teamElimed[losingTeamId] = true;
+    if (!m.isSimulated) {
+      teamElimed[m.winnerId] = false;
+      teamElimed[losingTeamId] = true;
+    }
+    teamSimElimed[m.winnerId] = false;
+    teamSimElimed[losingTeamId] = true;
     if (m.matchId === 'championship') {
-      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 2;
+      if (m.isSimulated) teamSimulatedPts[m.winnerId] = (teamSimulatedPts[m.winnerId] || 0) + 2;
       teamIsChamp[m.winnerId] = true;
     } else if (m.matchId === 'thirdPlace') {
-      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 0.5;
+      if (m.isSimulated) teamSimulatedPts[m.winnerId] = (teamSimulatedPts[m.winnerId] || 0) + 0.5;
       teamIsThird[m.winnerId] = true;
     } else {
-      teamWins[m.winnerId] = (teamWins[m.winnerId] || 0) + 1;
+      if (m.isSimulated) teamSimulatedPts[m.winnerId] = (teamSimulatedPts[m.winnerId] || 0) + 1;
     }
   });
-
+  console.log("Team Elimed")
+  console.log(teamElimed);
+  console.log("Team Sim Elimed")
+  console.log(teamSimElimed);
 
   return {
     teamMap,
@@ -245,8 +254,9 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     ownerPoints,
     ownerEarnedPoints,
     ownerTeams,       // current rosters post-trades
-    teamWins,         // teamId → points earned
+    teamSimulatedPts,         // teamId → points earned in simulation
     teamElimed,
+    teamSimElimed,
     teamIsChamp,
     teamIsThird,
     rounds,

@@ -136,7 +136,7 @@ function TradeSide({ owner, teamsGiven, pointsGiven, teamMap, receivingOwner, fl
 }
 
 function CurrentRosters({ rawData, bracketState }) {
-  const { ownerMap, ownerTeams, teamWins, teamIsChamp, teamIsThird } = bracketState;
+  const { ownerTeams, teamSimulatedPts, teamElimed, teamSimElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const owners = rawData.owners.map(o => ({
     owner: o,
@@ -146,19 +146,29 @@ function CurrentRosters({ rawData, bracketState }) {
   return (
     <div className={styles.rosterGrid}>
       {owners.map(({ owner, teams }) => {
-        const sorted = [...teams].sort((a, b) => (teamWins[b.id] || 0) - (teamWins[a.id] || 0));
+        const sorted = [...teams].sort((a, b) => {
+          const aElimed = teamSimElimed[a.id] || false;
+          const bElimed = teamSimElimed[b.id] || false;
+          const aWins = teamSimulatedPts[a.id] || 0;
+          const bWins = teamSimulatedPts[b.id] || 0;
+          if (bWins != aWins) return bWins - aWins;
+          if (aElimed != bElimed) return aElimed? 1: -1;
+          return a.id.localeCompare(b.id);
+        });
         return (
           <div key={owner.id} className={styles.rosterCard}>
             <div className={styles.rosterOwner}>{owner.name}</div>
             <div className={styles.rosterTeams}>
               {sorted.map(t => {
-                const wins = teamWins[t.id] || 0;
+                const wins = teamSimulatedPts[t.id] || 0;
+                const isElim = teamElimed[t.id] || false;
+                const isSimElim = teamSimElimed[t.id] || false;
                 return (
                   <span key={t.id} className={`${styles.rosterPill}
                     ${teamIsChamp[t.id] ? styles.pillChamp : ''}
                     ${teamIsThird[t.id] ? styles.pillThird : ''}
-                    ${wins > 0 && !teamIsChamp[t.id] && !teamIsThird[t.id] ? styles.pillWin : ''}
-                    ${wins === 0 ? styles.pillElim : ''}
+                    ${!isSimElim && wins > 0 && !teamIsChamp[t.id] && !teamIsThird[t.id] ? styles.pillWin : ''}
+                    ${wins == 0? (isElim ? styles.pillElim : (isSimElim ? styles.pillSimElim : styles.pillOther)): ''}
                   `}>
                     {t.name}
                   </span>

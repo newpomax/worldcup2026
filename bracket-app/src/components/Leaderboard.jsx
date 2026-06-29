@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Leaderboard.module.css';
 
 export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, fullPage = false }) {
-  const { ownerPoints, ownerEarnedPoints, ownerMap, ownerTeams, teamWins, teamElimed, teamIsChamp, teamIsThird } = bracketState;
+  const { ownerPoints, ownerEarnedPoints, ownerMap, ownerTeams, teamSimulatedPts, teamElimed, teamSimElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const sorted = Object.entries(ownerPoints)
     .map(([ownerId, pts]) => ({
@@ -45,12 +45,13 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
           const isDimmed = anySelected && !isSelected;
 
           const sortedTeams = [...teams].sort((a, b) => {
-            const aElimed = teamElimed[a.id] || false;
-            const bElimed = teamElimed[b.id] || false;
-            if (aElimed != bElimed) {
-              return aElimed;
-            }
-            return (teamWins[b.id] || 0) - (teamWins[a.id] || 0)
+            const aElimed = teamSimElimed[a.id] || false;
+            const bElimed = teamSimElimed[b.id] || false;
+            const aWins = teamSimulatedPts[a.id] || 0;
+            const bWins = teamSimulatedPts[b.id] || 0;
+            if (bWins != aWins) return bWins - aWins;
+            if (aElimed != bElimed) return aElimed? 1: -1;
+            return a.id.localeCompare(b.id);
           });
 
           const cardEl = (
@@ -82,18 +83,20 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
 
               <div className={styles.teamList}>
                 {sortedTeams.map(t => {
-                  const wins = teamWins[t.id] || 0;
+                  const wins = teamSimulatedPts[t.id] || 0;
                   const isChamp = teamIsChamp[t.id];
                   const isThird = teamIsThird[t.id];
                   const isElim = teamElimed[t.id];
+                  const isSimElim = teamSimElimed[t.id];
+
                   return (
                     <span
                       key={t.id}
                       className={`${styles.pill} ${fullPage ? styles.pillFull : ''}
                         ${isChamp ? styles.pillChamp : ''}
                         ${isThird ? styles.pillThird : ''}
-                        ${wins > 0 && !isChamp && !isThird ? styles.pillWin : ''}
-                        ${wins == 0? (isElim ? styles.pillElim : styles.pillOther): ''}
+                        ${(!isSimElim && wins > 0 && !isChamp && !isThird) ? styles.pillWin : ''}
+                        ${!isThird && !isChamp && isSimElim? (isElim ? styles.pillElim : (isSimElim ? styles.pillSimElim : styles.pillOther)): ''}
                       `}
                     >
                       {t.name}
