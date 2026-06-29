@@ -71,7 +71,7 @@ export function applyTradesUpTo(data, beforeRound) {
   return { teamOwner, pointsTransfers };
 }
 
-export function buildBracket(data, results) {
+export function buildBracket(data, simulatedResults, confirmedResults) {
   const teamMap = {};
   data.teams.forEach(t => { teamMap[t.id] = t; });
 
@@ -86,7 +86,8 @@ export function buildBracket(data, results) {
       matchId: m.matchId,
       team1Id: m.team1,
       team2Id: m.team2,
-      winnerId: results?.round1?.[m.matchId] || null,
+      winnerId: simulatedResults?.round1?.[m.matchId] || null,
+      isSimulated: !Object.hasOwn(confirmedResults?.round1 || {}, m.matchId)
     }))
   );
 
@@ -94,14 +95,16 @@ export function buildBracket(data, results) {
   for (let r = 1; r < 4; r++) {
     const prev = rounds[r - 1];
     const rKey = ROUND_KEYS[r];
-    const roundRes = results?.[rKey] || {};
+    const roundSimulatedRes = simulatedResults?.[rKey] || {};
+    const roundConfirmedRes = confirmedResults?.[rKey] || {};
     const matches = [];
     for (let i = 0; i < prev.length; i += 2) {
       const matchId = `r${r + 1}m${Math.floor(i / 2) + 1}`;
       const team1Id = prev[i]?.winnerId || null;
       const team2Id = prev[i + 1]?.winnerId || null;
-      const winnerId = (team1Id || team2Id) ? (roundRes[matchId] || null) : null;
-      matches.push({ matchId, team1Id, team2Id, winnerId });
+      const winnerId = (team1Id || team2Id) ? (roundSimulatedRes[matchId] || null) : null;
+      const isSimulated = !Object.hasOwn(roundConfirmedRes, matchId);
+      matches.push({ matchId, team1Id, team2Id, winnerId, isSimulated });
     }
     rounds.push(matches);
   }
@@ -115,7 +118,8 @@ export function buildBracket(data, results) {
     matchId: 'championship',
     team1Id: champTeam1,
     team2Id: champTeam2,
-    winnerId: (champTeam1 || champTeam2) ? (results?.championship || null) : null,
+    winnerId: (champTeam1 || champTeam2) ? (simulatedResults?.championship || null) : null,
+    isSimulated: !Object.hasOwn(confirmedResults || {}, "championship")
   };
 
   // ---- 3rd Place ----
@@ -129,7 +133,8 @@ export function buildBracket(data, results) {
     matchId: 'thirdPlace',
     team1Id: thirdTeam1,
     team2Id: thirdTeam2,
-    winnerId: (thirdTeam1 || thirdTeam2) ? (results?.thirdPlace || null) : null,
+    winnerId: (thirdTeam1 || thirdTeam2) ? (simulatedResults?.thirdPlace || null) : null,
+    isSimulated: !Object.hasOwn(confirmedResults || {}, "thirdPlace")
   };
 
   // --- Compute owner after trades ----
@@ -141,20 +146,17 @@ export function buildBracket(data, results) {
 
   // ---- Compute owner points with trade-aware ownership ----
   // Start everyone at initialPoints
-  const ownerPoints = {};
-  const ownerInitialPoints = {}
+  const ownerEarnedPoints = {};
   data.owners.forEach(o => { 
-    ownerInitialPoints[o.id] = o.initialPoints;
-    ownerPoints[o.id] = o.initialPoints;
+    ownerEarnedPoints[o.id] = o.initialPoints;
   });
 
   // Apply points transfers from ALL trades (all rounds)
   const { pointsTransfers: allTransfers } = applyTradesUpTo(data, 999);
-  const ownerTransferredPoints = {};
   data.owners.forEach(o => {
-    ownerTransferredPoints[o.id] = (allTransfers[o.id] || 0);
-    ownerPoints[o.id] += (allTransfers[o.id] || 0);
+    ownerEarnedPoints[o.id] += (allTransfers[o.id] || 0);
   });
+  const ownerPoints = {...ownerEarnedPoints};
 
   // Award win points using trade-aware ownership per round
   // Round r+1 uses ownership state "before round r+1"
@@ -164,7 +166,12 @@ export function buildBracket(data, results) {
     roundMatches.forEach(m => {
       if (!m.winnerId) return;
       const effectiveOwner = teamOwner[m.winnerId];
-      if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 1;
+      if (effectiveOwner) {
+        ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 1;
+        if (!m.isSimulated) {
+          ownerEarnedPoints[effectiveOwner] = (ownerEarnedPoints[effectiveOwner] || 0) + 1;
+        }
+      }
     });
   });
   console.log(`postTradeOwner: ${postTradeOwnerMap}`)
@@ -173,14 +180,24 @@ export function buildBracket(data, results) {
   if (thirdPlaceMatch.winnerId) {
     const { teamOwner } = applyTradesUpTo(data, 'thirdPlace');
     const effectiveOwner = teamOwner[thirdPlaceMatch.winnerId];
-    if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 0.5;
+    if (effectiveOwner) {
+      ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 0.5;
+      if (!thirdPlaceMatch.isSimulated) {
+          ownerEarnedPoints[effectiveOwner] = (ownerEarnedPoints[effectiveOwner] || 0) + 0.5;
+      }
+    }
   }
 
   // Championship — uses ownership state before 'championship'
   if (champMatch.winnerId) {
     const { teamOwner } = applyTradesUpTo(data, 'championship');
     const effectiveOwner = teamOwner[champMatch.winnerId];
-    if (effectiveOwner) ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 2;
+    if (effectiveOwner) {
+      ownerPoints[effectiveOwner] = (ownerPoints[effectiveOwner] || 0) + 2;
+      if (!champMatch.isSimulated) {
+        ownerEarnedPoints[effectiveOwner] = (ownerEarnedPoints[effectiveOwner] || 0) + 2;
+      }
+    }
   }
 
   // ---- Current team rosters (after all trades) ----
@@ -225,9 +242,8 @@ export function buildBracket(data, results) {
     teamMap,
     ownerMap,
     postTradeOwnerMap,
-    ownerInitialPoints,
     ownerPoints,
-    ownerTransferredPoints,
+    ownerEarnedPoints,
     ownerTeams,       // current rosters post-trades
     teamWins,         // teamId → points earned
     teamElimed,
@@ -252,8 +268,8 @@ export function getRoundLabelByKey(key) {
   return map[key] || `Round ${key}`;
 }
 
-export function applyPick(results, matchId, winnerId, data, bracketState) {
-  const next = JSON.parse(JSON.stringify(results));
+export function applyPick(simulatedResults,  matchId, winnerId, data, bracketState) {
+  const next = JSON.parse(JSON.stringify(simulatedResults));
 
   if (matchId === 'thirdPlace') { next.thirdPlace = winnerId || null; return next; }
   if (matchId === 'championship') { next.championship = winnerId || null; return next; }

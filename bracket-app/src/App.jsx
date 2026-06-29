@@ -29,10 +29,10 @@ export default function App() {
 
   const handlePick = useCallback((matchId, winnerId) => {
     if (!rawData || !simulatedResults) return;
-    const state = buildBracket(rawData, simulatedResults);
+    const state = buildBracket(rawData, simulatedResults, confirmedResults);
     const next = applyPick(simulatedResults, matchId, winnerId, rawData, state);
     setSimulatedResults(next);
-  }, [rawData, simulatedResults]);
+  }, [rawData, simulatedResults, confirmedResults]);
 
   const handleReset = useCallback(() => {
     if (confirmedResults) setSimulatedResults(JSON.parse(JSON.stringify(confirmedResults)));
@@ -64,7 +64,7 @@ export default function App() {
     );
   }
 
-  const bracketState = buildBracket(rawData, simulatedResults);
+  const bracketState = buildBracket(rawData, simulatedResults, confirmedResults);
   const tradeCount = (rawData.trades || []).length;
 
   return (

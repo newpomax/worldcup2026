@@ -2,13 +2,13 @@ import React from 'react';
 import styles from './Leaderboard.module.css';
 
 export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, fullPage = false }) {
-  const { ownerPoints, ownerInitialPoints, ownerTransferredPoints, ownerMap, ownerTeams, teamWins, teamElimed, teamIsChamp, teamIsThird } = bracketState;
+  const { ownerPoints, ownerEarnedPoints, ownerMap, ownerTeams, teamWins, teamElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const sorted = Object.entries(ownerPoints)
     .map(([ownerId, pts]) => ({
       owner: ownerMap[ownerId],
       ptsSimulated: pts,
-      ptsEarned: (ownerInitialPoints[ownerId] || 0) + (ownerTransferredPoints[ownerId] || 0),
+      ptsEarned: ownerEarnedPoints[ownerId] || 0,
     }))
     .sort((a, b) => b.ptsSimulated - a.ptsSimulated);
 
@@ -44,7 +44,14 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
           const isSelected = selectedOwner === ownerId;
           const isDimmed = anySelected && !isSelected;
 
-          const sortedTeams = [...teams].sort((a, b) => (teamWins[b.id] || 0) - (teamWins[a.id] || 0));
+          const sortedTeams = [...teams].sort((a, b) => {
+            const aElimed = teamElimed[a.id] || false;
+            const bElimed = teamElimed[b.id] || false;
+            if (aElimed != bElimed) {
+              return aElimed;
+            }
+            return (teamWins[b.id] || 0) - (teamWins[a.id] || 0)
+          });
 
           const cardEl = (
             <>
@@ -86,7 +93,7 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                         ${isChamp ? styles.pillChamp : ''}
                         ${isThird ? styles.pillThird : ''}
                         ${wins > 0 && !isChamp && !isThird ? styles.pillWin : ''}
-                        ${isElim ? styles.pillElim : styles.pillOther}
+                        ${wins == 0? (isElim ? styles.pillElim : styles.pillOther): ''}
                       `}
                     >
                       {t.name}
