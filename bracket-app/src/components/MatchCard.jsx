@@ -19,7 +19,7 @@ export default function MatchCard({
   onPick,
   isChampionship = false,
   isThirdPlace = false,
-  highlightedTeams = null,
+  selectedOwner = null,
 }) {
   if (!match) return null;
 
@@ -46,10 +46,11 @@ export default function MatchCard({
   }
 
   // Highlight logic per slot
-  function slotHighlight(teamId) {
-    if (!highlightedTeams) return 'none';        // no filter active
+  function slotHighlight(teamId, roundNum) {
+    if (!selectedOwner) return 'none';        // no filter active
     if (!teamId) return 'none';
-    return highlightedTeams.has(teamId) ? 'highlight' : 'dim';
+    const currentOwner = postTradeOwnerMap[roundNum][teamId];
+    return selectedOwner == currentOwner ? 'highlight' : 'dim';
   }
   const effectiveOwnerMap = postTradeOwnerMap[roundNum] ?? {};
   const team1Owner = effectiveOwnerMap[team1Id];
@@ -70,7 +71,7 @@ export default function MatchCard({
         canClick={!isLocked && !!team1Id}
         onClick={() => handleTeamClick(team1Id)}
         isChampionship={isChampionship}
-        highlight={slotHighlight(team1Id)}
+        highlight={slotHighlight(team1Id, roundNum)}
       />
       <div className={styles.divider} />
       <TeamSlot
@@ -82,7 +83,7 @@ export default function MatchCard({
         canClick={!isLocked && !!team2Id}
         onClick={() => handleTeamClick(team2Id)}
         isChampionship={isChampionship}
-        highlight={slotHighlight(team2Id)}
+        highlight={slotHighlight(team2Id, roundNum)}
       />
     </div>
   );

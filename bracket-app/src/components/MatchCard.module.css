@@ -72,11 +72,11 @@
 .loser.slotHighlight {
   background: rgba(240, 180, 41, 0.18) !important;
   box-shadow: inset 2px 0 0 var(--gold);
-  opacity: 0.7
+  opacity: 0.75
 }
 
 .slotDim {
-  opacity: 0.2;
+  opacity: 0.5;
 }
 
 /* Dim loses to highlight: if highlighted, don't dim */

@@ -26,11 +26,6 @@ export default function BracketView({
 }) {
   const { teamMap, ownerMap, postTradeOwnerMap, rounds, thirdPlaceMatch, champMatch } = bracketState;
 
-  // Compute the set of team IDs ever owned by the selected owner (for highlighting)
-  const highlightedTeams = selectedOwner
-    ? getEverOwnedTeams(rawData, selectedOwner)
-    : null;
-
   const halves = rounds.map(r => ({
     top: r.slice(0, r.length / 2),
     bottom: r.slice(r.length / 2),
@@ -39,7 +34,7 @@ export default function BracketView({
   const roundKeys = ['round1', 'round2', 'round3', 'round4'];
   const roundLabels = rounds.map((_, i) => getRoundLabel(i));
 
-  const sharedProps = { teamMap, ownerMap, postTradeOwnerMap, confirmedResults, onPick, highlightedTeams };
+  const sharedProps = { teamMap, ownerMap, postTradeOwnerMap, confirmedResults, onPick, selectedOwner };
 
   return (
     <div className={styles.container}>
@@ -131,7 +126,7 @@ export default function BracketView({
   );
 }
 
-function RoundColumn({ matches, totalSlots, teamMap, ownerMap, postTradeOwnerMap, confirmedResults, roundKey, onPick, highlightedTeams, width, flip, marginLeft = 0, marginRight = 0, zIndex = 1 }) {
+function RoundColumn({ matches, totalSlots, teamMap, ownerMap, postTradeOwnerMap, confirmedResults, roundKey, onPick, selectedOwner, width, flip, marginLeft = 0, marginRight = 0, zIndex = 1 }) {
   const slotsPerMatch = totalSlots / matches.length;
 
   return (
@@ -165,7 +160,7 @@ function RoundColumn({ matches, totalSlots, teamMap, ownerMap, postTradeOwnerMap
               confirmedResults={confirmedResults}
               roundKey={roundKey}
               onPick={onPick}
-              highlightedTeams={highlightedTeams}
+              selectedOwner={selectedOwner}
             />
           </div>
         );
