@@ -86,7 +86,9 @@
   },
   "results": {
     "round1": {
-      "r1m03": "canada"
+      "r1m01": "paraguay",
+      "r1m03": "canada",
+      "r1m09": "brazil"
     },
     "round2": {},
     "round3": {},
@@ -114,6 +116,11 @@
         "round": 1,
         "partyA": { "owner": "gabe", "teams_given": ["ivory_coast"], "points_given": 0 },
         "partyB": { "owner": "max",   "teams_given": ["senegal"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "jack", "teams_given": ["paraguay", "dr_congo"], "points_given": 0 },
+        "partyB": { "owner": "ricky",   "teams_given": ["ecuador"], "points_given": 0 }
       }
   ]
 }
