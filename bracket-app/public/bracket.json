@@ -121,6 +121,16 @@
         "round": 1,
         "partyA": { "owner": "jack", "teams_given": ["paraguay", "dr_congo"], "points_given": 0 },
         "partyB": { "owner": "ricky",   "teams_given": ["ecuador"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "max", "teams_given": ["bosnia"], "points_given": 0 },
+        "partyB": { "owner": "ricky",   "teams_given": ["dr_congo"], "points_given": 0 }
+      },
+      {
+        "round": 2,
+        "partyA": { "owner": "max", "teams_given": [], "points_given": 0 },
+        "partyB": { "owner": "ricky",   "teams_given": ["paraguay"], "points_given": 0 }
       }
   ]
 }
