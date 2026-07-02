@@ -243,11 +243,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
       if (m.isSimulated) teamSimulatedPts[m.winnerId] = (teamSimulatedPts[m.winnerId] || 0) + 1;
     }
   });
-  console.log("Team Elimed")
-  console.log(teamElimed);
-  console.log("Team Sim Elimed")
-  console.log(teamSimElimed);
-
+  
   return {
     teamMap,
     ownerMap,
