@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { buildBracket, applyPick } from './bracketLogic';
+import { buildBracket, applyPick, computeMaxScores } from './bracketLogic';
 import BracketView from './components/BracketView';
 import Leaderboard from './components/Leaderboard';
 import TradeHistory from './components/TradeHistory';
@@ -65,6 +65,7 @@ export default function App() {
   }
 
   const bracketState = buildBracket(rawData, simulatedResults, confirmedResults);
+  const maxScores = computeMaxScores(rawData, confirmedResults, bracketState);
   const tradeCount = (rawData.trades || []).length;
 
   return (
@@ -121,6 +122,7 @@ export default function App() {
               hasSimulation={hasSimulation}
               selectedOwner={selectedOwner}
               onSelectOwner={handleSelectOwner}
+              maxScores={maxScores}
             />
             <div className={styles.bracketDivider}>
               {selectedOwner && (
@@ -146,6 +148,7 @@ export default function App() {
             hasSimulation={hasSimulation}
             selectedOwner={null}
             onSelectOwner={() => {}}
+            maxScores={maxScores}
             fullPage
           />
         ) : (

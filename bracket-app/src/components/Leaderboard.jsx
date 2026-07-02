@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './Leaderboard.module.css';
 
-export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, fullPage = false }) {
+export default function Leaderboard({ rawData, bracketState, hasSimulation, selectedOwner, onSelectOwner, maxScores = {}, fullPage = false }) {
   const { ownerPoints, ownerEarnedPoints, ownerMap, ownerTeams, teamSimulatedPts, teamElimed, teamSimElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const sorted = Object.entries(ownerPoints)
@@ -80,7 +80,7 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                   <div className={styles.barFill} style={{ width: `${barWidth}%` }} />
                 </div>
               </div>
-
+              <div className={styles.cardBottom}>
               <div className={styles.teamList}>
                 {sortedTeams.map(t => {
                   const wins = teamSimulatedPts[t.id] || 0;
@@ -108,6 +108,12 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                     </span>
                   );
                 })}
+              </div>
+              {fullPage && maxScores[ownerId] != null && (
+                <span className={styles.ptsMax}>
+                  ({fmtPts(maxScores[ownerId])} pts max)
+                </span>
+              )}
               </div>
             </>
           );

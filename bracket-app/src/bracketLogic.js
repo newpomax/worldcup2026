@@ -364,3 +364,228 @@ export function getTeamOwnerAtRound(data, teamId, roundKey) {
   const { teamOwner } = applyTradesUpTo(data, roundNum);
   return teamOwner[teamId] || null;
 }
+
+/**
+ * Computes the maximum possible total points for each owner given the current
+ * confirmed results and the remaining unplayed matches.
+ *
+ * Algorithm:
+ *   For each bracket slot (match), we recursively find which teams from a given
+ *   owner *could* reach that slot. Then we greedily assign wins to maximize the
+ *   owner's points, handling the case where two of their teams meet (only one
+ *   can advance).
+ *
+ * Returns: { [ownerId]: maxPoints }
+ */
+export function computeMaxScores(data, confirmedResults, bracketState) {
+  const { rounds, thirdPlaceMatch, champMatch, teamMap } = bracketState;
+  const ROUND_KEYS = ['round1', 'round2', 'round3', 'round4'];
+
+  // For each owner, compute max additional points they can earn from here.
+  // We do this by walking the bracket tree and for each match finding the best
+  // outcome for the owner.
+
+  // Build a map: matchId -> match object (for quick lookup)
+  const matchById = {};
+  rounds.forEach(r => r.forEach(m => { matchById[m.matchId] = { ...m, type: 'regular' }; }));
+  matchById['thirdPlace'] = { ...thirdPlaceMatch, type: 'thirdPlace' };
+  matchById['championship'] = { ...champMatch, type: 'championship' };
+
+  // Build parent map: matchId -> { parentMatchId, slot (1 or 2) }
+  // so we know which match a winner feeds into
+  const feedsInto = {}; // matchId -> { matchId, teamSlot }
+  rounds.forEach((roundMatches, rIdx) => {
+    if (rIdx >= rounds.length - 1) return; // last regular round feeds semis
+    roundMatches.forEach((m, posInRound) => {
+      const nextMatchIdx = Math.floor(posInRound / 2);
+      const nextMatch = rounds[rIdx + 1]?.[nextMatchIdx];
+      if (nextMatch) {
+        feedsInto[m.matchId] = { matchId: nextMatch.matchId, slot: posInRound % 2 === 0 ? 1 : 2 };
+      }
+    });
+  });
+  // Semis feed championship and thirdPlace
+  if (rounds[3]) {
+    feedsInto[rounds[3][0].matchId] = { matchId: 'championship', slot: 1 };
+    feedsInto[rounds[3][1].matchId] = { matchId: 'championship', slot: 2 };
+    // losers of semis feed thirdPlace — handled separately
+  }
+
+  /**
+   * For a given match, returns the set of teams that could possibly reach
+   * that match as a participant (team1 or team2 slot), given confirmed results.
+   * If the match has a confirmed team in that slot already, returns just that team.
+   */
+  function possibleTeamsForSlot(matchId, slot) {
+    const match = matchById[matchId];
+    if (!match) return new Set();
+    const teamId = slot === 1 ? match.team1Id : match.team2Id;
+    if (teamId) return new Set([teamId]); // already determined
+
+    // Slot is TBD — find the match that feeds into this slot
+    // and recursively find all teams that could win it
+    const feederMatchId = Object.keys(feedsInto).find(
+      mid => feedsInto[mid].matchId === matchId && feedsInto[mid].slot === slot
+    );
+    if (!feederMatchId) return new Set();
+    return possibleWinnersOf(feederMatchId);
+  }
+
+  /**
+   * Returns the set of teams that could possibly win the given match.
+   * For confirmed/simulated matches with a winner, returns just that winner.
+   * For unplayed matches, returns all teams that could possibly reach it.
+   */
+  function possibleWinnersOf(matchId) {
+    const match = matchById[matchId];
+    if (!match) return new Set();
+
+    // If there's already a winner (confirmed or simulated), that's the only possibility
+    if (match.winnerId) return new Set([match.winnerId]);
+
+    // Otherwise, union of all teams that could reach either slot
+    const s1 = possibleTeamsForSlot(matchId, 1);
+    const s2 = possibleTeamsForSlot(matchId, 2);
+    return new Set([...s1, ...s2]);
+  }
+
+  /**
+   * Computes the maximum points an owner can earn from a given match subtree,
+   * assuming they optimally choose outcomes for unplayed matches.
+   *
+   * Returns: { maxPts, bestWinner } where bestWinner is the team the owner
+   * would want to win this match.
+   *
+   * isThirdPlace / isChampionship affect point values.
+   */
+  function maxPtsFromMatch(matchId, ownerId, roundIdx) {
+    const match = matchById[matchId];
+    if (!match) return { maxPts: 0, bestWinner: null };
+
+    const isChamp = matchId === 'championship';
+    const isThird = matchId === 'thirdPlace';
+    const winPts = isChamp ? 2 : isThird ? 0.5 : 1;
+
+    // Get ownership at this round
+    const roundNum = isChamp ? 'championship' : isThird ? 'thirdPlace' : roundIdx + 1;
+    const { teamOwner } = applyTradesUpTo(data, roundNum);
+
+    // If the match already has a winner (confirmed or simulated)
+    if (match.winnerId) {
+      const owner = teamOwner[match.winnerId];
+      const pts = owner === ownerId ? winPts : 0;
+      return { maxPts: pts, bestWinner: match.winnerId };
+    }
+
+    // Match is unplayed. Find possible teams for each slot.
+    const teams1 = possibleTeamsForSlot(matchId, 1);
+    const teams2 = possibleTeamsForSlot(matchId, 2);
+
+    // For each possible team in slot 1 winning, and each possible team in slot 2 winning,
+    // compute best outcome — but since we're maximizing for one owner, we just need to
+    // find which team winning this match is best for the owner.
+    // The best winner is:
+    //   1. An owner's team (earns winPts for this match), OR
+    //   2. Any team (earns 0) — but still matters for downstream
+
+    // Since we're just computing max total, and downstream matches are independent
+    // subtrees, we can compute: for each candidate winner, what's the max pts
+    // the owner earns from THIS match + downstream assuming that winner.
+    // But that gets exponential. Instead, use a greedy upper bound:
+    // - For each slot, assume the owner's team (if any) wins all its prior matches
+    // - If both slots could have the owner's team, pick the path with more downstream value
+
+    const ownerTeams1 = [...teams1].filter(tid => teamOwner[tid] === ownerId);
+    const ownerTeams2 = [...teams2].filter(tid => teamOwner[tid] === ownerId);
+
+    const hasOwnerIn1 = ownerTeams1.length > 0;
+    const hasOwnerIn2 = ownerTeams2.length > 0;
+
+    if (!hasOwnerIn1 && !hasOwnerIn2) {
+      // Owner has no team that can reach this match — earns 0 here
+      // Pick any winner (doesn't matter for owner's score at this node)
+      return { maxPts: 0, bestWinner: [...teams1][0] || [...teams2][0] || null };
+    }
+
+    if (hasOwnerIn1 && hasOwnerIn2) {
+      // Owner's teams could meet each other — only one can win
+      // Both earn winPts here, but we can only pick one
+      // Pick the one with more teams/downstream potential (they're symmetric in pts here)
+      // Just pick slot 1's owner team — earns winPts, the other is eliminated
+      return { maxPts: winPts, bestWinner: ownerTeams1[0] };
+    }
+
+    // Owner has a team in exactly one slot — it wins, earns winPts
+    const winner = hasOwnerIn1 ? ownerTeams1[0] : ownerTeams2[0];
+    return { maxPts: winPts, bestWinner: winner };
+  }
+
+  function maxPtsFromThirdPlace(ownerId) {
+    const { teamOwner } = applyTradesUpTo(data, 'thirdPlace');
+
+    // If already has participants, use normal path
+    if (thirdPlaceMatch.team1Id || thirdPlaceMatch.team2Id) {
+      return maxPtsFromMatch('thirdPlace', ownerId, null);
+    }
+
+    // Derive possible 3rd place participants: losers of each semi
+    // A team can reach 3rd place if it could reach a semi but NOT win it
+    // i.e. it's in possibleWinnersOf(semi) but the semi has no confirmed winner yet
+    const [semi1, semi2] = rounds[3];
+
+    function possibleLosersOf(semi) {
+      if (semi.winnerId) {
+        // Semi is decided — loser is fixed
+        const loser = semi.winnerId === semi.team1Id ? semi.team2Id : semi.team1Id;
+        return loser ? new Set([loser]) : new Set();
+      }
+      // Anyone who could reach this semi could end up as the loser
+      return possibleWinnersOf(semi.matchId);
+    }
+
+    const losers1 = possibleLosersOf(semi1);
+    const losers2 = possibleLosersOf(semi2);
+
+    const ownerIn1 = [...losers1].some(tid => teamOwner[tid] === ownerId);
+    const ownerIn2 = [...losers2].some(tid => teamOwner[tid] === ownerId);
+
+    if (!ownerIn1 && !ownerIn2) return { maxPts: 0 };
+    // Owner has a team that could reach 3rd place — they can win it for +0.5
+    return { maxPts: 0.5 };
+  }
+
+
+  // Now compute max score per owner
+  const maxScores = {};
+  data.owners.forEach(o => {
+    let maxAdditional = 0;
+
+    // All confirmed + all-trades-applied base
+    const base = bracketState.ownerEarnedPoints[o.id] ?? bracketState.ownerPoints[o.id] ?? 0;
+
+    // Walk all unplayed matches and sum up best-case points
+    rounds.forEach((roundMatches, rIdx) => {
+      roundMatches.forEach(m => {
+        if (m.winnerId) return; // already played, already counted in base or ownerPoints
+        const { maxPts } = maxPtsFromMatch(m.matchId, o.id, rIdx);
+        maxAdditional += maxPts;
+      });
+    });
+
+    // 3rd place
+    if (!thirdPlaceMatch.winnerId) {
+      const { maxPts } = maxPtsFromThirdPlace(o.id);
+      maxAdditional += maxPts;
+    }
+
+    // Championship
+    if (!champMatch.winnerId) {
+      const { maxPts } = maxPtsFromMatch('championship', o.id, null);
+      maxAdditional += maxPts;
+    }
+
+    maxScores[o.id] = bracketState.ownerPoints[o.id] + maxAdditional;
+  });
+
+  return maxScores;
+}
