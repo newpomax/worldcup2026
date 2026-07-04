@@ -43,6 +43,8 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
           const barWidth = range > 0 ? Math.max(0, (row.ptsSimulated - Math.min(minPts, 0)) / range) * 100 : 50;
           const isSelected = selectedOwner === ownerId;
           const isDimmed = anySelected && !isSelected;
+          const isDisciplineWinner = ownerId === (rawData.discipline_winner || null);
+          console.log("Owner: " + ownerId + ", isDisciplineWinner: " + isDisciplineWinner + ", discipline_winner: " + rawData.discipline_winner);
 
           const sortedTeams = [...teams].sort((a, b) => {
             const aElimed = teamSimElimed[a.id] || false;
@@ -63,6 +65,11 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
                 <span className={`${styles.ownerName} ${fullPage ? styles.ownerNameFull : ''}`}>
                   {row.owner.name}
                 </span>
+                {isDisciplineWinner && (
+                  <span className={styles.disciplineWinner}>
+                    <img src="card.png" alt="Discipline Winner" width="15" height="15" />
+                  </span>
+                )}
                 <div className={styles.pts}>
                   <span className={`${styles.ptsTotal} ${fullPage ? styles.ptsTotalFull : ''} ${row.pts < 0 ? styles.negative : ''}`}>
                     {fmtPts(row.ptsSimulated)}

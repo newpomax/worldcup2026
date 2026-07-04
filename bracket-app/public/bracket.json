@@ -11,9 +11,10 @@
     { "id": "gabe",    "name": "Gabe",    "initialPoints": 4.0 },
     { "id": "ro",      "name": "Ro",      "initialPoints": 3.0 },
     { "id": "ricky",   "name": "Ricky",   "initialPoints": 3.0 },
-    { "id": "bella",   "name": "Bella",   "initialPoints": 2.0 },
+    { "id": "bella",   "name": "Bella",   "initialPoints": 3.0 },
     { "id": "carol",   "name": "Carol",   "initialPoints": 2.0 }
   ],
+  "discipline_winner": "bella",
   "teams": [
     { "id": "mexico",  "name": "🇲🇽 Mexico",  "owner": "ro"  },
     { "id": "south_africa",  "name": "🇿🇦 South Africa",  "owner": "bella"    },
@@ -93,12 +94,15 @@
       "r1m05": "portugal",
       "r1m06": "spain",
       "r1m07": "usa",
+      "r1m08": "belgium",
       "r1m09": "brazil",
       "r1m10": "norway",
       "r1m11": "mexico",
       "r1m12": "england",
-      "r1m08": "belgium",
-      "r1m15": "switzerland"
+      "r1m13": "argentina",
+      "r1m14": "egypt",
+      "r1m15": "switzerland",
+      "r1m16": "colombia"
     },
     "round2": {},
     "round3": {},
@@ -141,6 +145,16 @@
         "round": 2,
         "partyA": { "owner": "max", "teams_given": [], "points_given": 0 },
         "partyB": { "owner": "ricky",   "teams_given": ["paraguay"], "points_given": 0 }
+      },
+      {
+        "round": 1,
+        "partyA": { "owner": "ro", "teams_given": ["australia"], "points_given": 0 },
+        "partyB": { "owner": "jack",   "teams_given": [""], "points_given": 1 }
+      },
+       {
+        "round": 1,
+        "partyA": { "owner": "jack", "teams_given": ["australia", "ghana"], "points_given": 0 },
+        "partyB": { "owner": "bella",   "teams_given": [""], "points_given": 1.5 }
       }
   ]
 }
