@@ -22,6 +22,7 @@ const ROUND_KEYS = ['round1', 'round2', 'round3', 'round4'];
 const ROUND_ORDER = [1, 2, 3, 4, 'thirdPlace', 'championship'];
 
 function roundToOrder(r) {
+  if ( r === 0) return -1;
   const i = ROUND_ORDER.indexOf(r);
   return i === -1 ? 999 : i;
 }
@@ -112,8 +113,8 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
 
   const [semi1, semi2] = rounds[3];
 
-    // ---- Championship ----
-    const champTeam1 = semi1?.winnerId || null;
+  // ---- Championship ----
+  const champTeam1 = semi1?.winnerId || null;
   const champTeam2 = semi2?.winnerId || null;
   const champMatch = {
     matchId: 'championship',
@@ -137,13 +138,6 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     winnerId: (thirdTeam1 || thirdTeam2) ? (simulatedResults?.thirdPlace || null) : null,
     isSimulated: confirmedResults.thirdPlace == null
   };
-
-  // --- Compute owner after trades ----
-  const postTradeOwnerMap = {}; // map of round number to { team: owner } map
-  for (let r = 1; r < 6; r++) {
-    const { teamOwner } = applyTradesUpTo(data, r);
-    postTradeOwnerMap[r] = teamOwner;
-  }
 
   // ---- Compute owner points with trade-aware ownership ----
   // Start everyone at initialPoints
@@ -209,6 +203,31 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     if (ownerTeams[currentOwner]) ownerTeams[currentOwner].push({ ...t });
   });
 
+  // --- Compute owner after trades ----
+  const postTradeOwnerMap = {}; // map of round number to { team: owner } map
+  for (let r = 0; r < 6; r++) {
+    const { teamOwner } = applyTradesUpTo(data, r);
+    postTradeOwnerMap[r] = teamOwner;
+  }
+
+  // ---- Compute teams ever owned by each owner (original + trades) ----
+  const previouslyOwnedTeams = {};
+  Object.entries(teamMap).forEach(([teamId, team]) => {
+    const prevSet = previouslyOwnedTeams[team.owner] || [];
+    previouslyOwnedTeams[team.owner] = [...new Set([...prevSet, teamId])];
+  });
+  for (const trade of data.trades || []) {
+    const { partyA, partyB } = trade;
+    const teamsInvolved = [...(partyA.teams_given || []), ...(partyB.teams_given || [])];
+    const partAPrev = previouslyOwnedTeams[partyA.owner] || [];
+    previouslyOwnedTeams[partyA.owner] = [...new Set([...partAPrev, ...teamsInvolved])];
+    const partBPrev = previouslyOwnedTeams[partyB.owner] || [];
+    previouslyOwnedTeams[partyB.owner] = [...new Set([...partBPrev, ...teamsInvolved])];
+  }
+  Object.entries(previouslyOwnedTeams).forEach(([ownerId, teamIds]) => {
+    previouslyOwnedTeams[ownerId] = teamIds.map(tid => teamMap[tid]).filter(Boolean);
+  });
+
   // ---- Count wins per team (for display) ----
   const teamSimulatedPts = {};
   const teamSimElimed = {};
@@ -252,6 +271,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     ownerPoints,
     ownerEarnedPoints,
     ownerTeams,       // current rosters post-trades
+    previouslyOwnedTeams, // map of ownerId → set of teamIds they ever owned (original or via trades)
     teamSimulatedPts,         // teamId → points earned in simulation
     teamElimed,
     teamSimElimed,

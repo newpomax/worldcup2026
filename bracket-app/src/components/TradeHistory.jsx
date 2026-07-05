@@ -4,7 +4,7 @@ import styles from './TradeHistory.module.css';
 
 export default function TradeHistory({ rawData, bracketState }) {
   const trades = rawData.trades || [];
-  const { ownerMap, teamMap } = bracketState;
+  const { ownerMap, teamMap, ownerTeams, previouslyOwnedTeams } = bracketState;
 
   if (trades.length === 0) {
     return (
@@ -64,7 +64,13 @@ export default function TradeHistory({ rawData, bracketState }) {
       {/* Current rosters post all trades */}
       <div className={styles.rosterSection}>
         <h3 className={styles.rosterTitle}>Current Rosters</h3>
-        <CurrentRosters rawData={rawData} bracketState={bracketState} />
+        <CurrentRosters rawData={rawData} bracketState={bracketState} ownershipMap={ownerTeams} />
+      </div>
+
+      {/* Teams ever owned */}
+      <div className={styles.rosterSection}>
+        <h3 className={styles.rosterTitle}>Teams Ever Owned</h3>
+        <CurrentRosters rawData={rawData} bracketState={bracketState} ownershipMap={previouslyOwnedTeams} />
       </div>
     </div>
   );
@@ -135,13 +141,14 @@ function TradeSide({ owner, teamsGiven, pointsGiven, teamMap, receivingOwner, fl
   );
 }
 
-function CurrentRosters({ rawData, bracketState }) {
-  const { ownerTeams, teamSimulatedPts, teamElimed, teamSimElimed, teamIsChamp, teamIsThird } = bracketState;
+function CurrentRosters({ rawData, bracketState, ownershipMap }) {
+  const { teamSimulatedPts, teamElimed, teamSimElimed, teamIsChamp, teamIsThird } = bracketState;
 
   const owners = rawData.owners.map(o => ({
     owner: o,
-    teams: ownerTeams[o.id] || [],
+    teams: ownershipMap[o.id] || [],
   }));
+  owners.sort((a, b) => a.owner.name.localeCompare(b.owner.name));
 
   return (
     <div className={styles.rosterGrid}>
@@ -157,7 +164,10 @@ function CurrentRosters({ rawData, bracketState }) {
         });
         return (
           <div key={owner.id} className={styles.rosterCard}>
+            <div className={styles.rosterHeader}>
             <div className={styles.rosterOwner}>{owner.name}</div>
+            <div className={styles.rosterCount}>{teams.length} {teams.length === 1 ? 'team' : 'teams'}</div>
+            </div>
             <div className={styles.rosterTeams}>
               {sorted.map(t => {
                 const wins = teamSimulatedPts[t.id] || 0;

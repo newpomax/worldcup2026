@@ -153,12 +153,12 @@
       {
         "round": 1,
         "partyA": { "owner": "ro", "teams_given": ["australia"], "points_given": 0 },
-        "partyB": { "owner": "jack",   "teams_given": [""], "points_given": 0.5 }
+        "partyB": { "owner": "jack",   "teams_given": [], "points_given": 0.5 }
       },
        {
         "round": 1,
         "partyA": { "owner": "jack", "teams_given": ["australia", "ghana"], "points_given": 0 },
-        "partyB": { "owner": "bella",   "teams_given": [""], "points_given": 1.5 }
+        "partyB": { "owner": "bella",   "teams_given": [], "points_given": 1.5 }
       }
   ]
 }
