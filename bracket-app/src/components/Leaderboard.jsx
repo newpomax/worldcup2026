@@ -44,7 +44,6 @@ export default function Leaderboard({ rawData, bracketState, hasSimulation, sele
           const isSelected = selectedOwner === ownerId;
           const isDimmed = anySelected && !isSelected;
           const isDisciplineWinner = ownerId === (rawData.discipline_winner || null);
-          console.log("Owner: " + ownerId + ", isDisciplineWinner: " + isDisciplineWinner + ", discipline_winner: " + rawData.discipline_winner);
 
           const sortedTeams = [...teams].sort((a, b) => {
             const aElimed = teamSimElimed[a.id] || false;

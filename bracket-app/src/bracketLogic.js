@@ -99,7 +99,8 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
     const roundConfirmedRes = confirmedResults?.[rKey] || {};
     const matches = [];
     for (let i = 0; i < prev.length; i += 2) {
-      const matchId = `r${r + 1}m${Math.floor(i / 2) + 1}`;
+      const matchNum = (Math.floor(i / 2) + 1).toString().padStart(2, '0');
+      const matchId = `r${r + 1}m${matchNum}`;
       const team1Id = prev[i]?.winnerId || null;
       const team2Id = prev[i + 1]?.winnerId || null;
       const winnerId = (team1Id || team2Id) ? (roundSimulatedRes[matchId] || null) : null;
@@ -111,8 +112,8 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
 
   const [semi1, semi2] = rounds[3];
 
-  // ---- Championship ----
-  const champTeam1 = semi1?.winnerId || null;
+    // ---- Championship ----
+    const champTeam1 = semi1?.winnerId || null;
   const champTeam2 = semi2?.winnerId || null;
   const champMatch = {
     matchId: 'championship',
@@ -243,7 +244,7 @@ export function buildBracket(data, simulatedResults, confirmedResults) {
       if (m.isSimulated) teamSimulatedPts[m.winnerId] = (teamSimulatedPts[m.winnerId] || 0) + 1;
     }
   });
-  
+
   return {
     teamMap,
     ownerMap,

@@ -104,7 +104,10 @@
       "r1m15": "switzerland",
       "r1m16": "colombia"
     },
-    "round2": {},
+    "round2": {
+      "r2m01": "france",
+      "r2m02": "morocco"
+    },
     "round3": {},
     "round4": {},
     "thirdPlace": null,
@@ -149,7 +152,7 @@
       {
         "round": 1,
         "partyA": { "owner": "ro", "teams_given": ["australia"], "points_given": 0 },
-        "partyB": { "owner": "jack",   "teams_given": [""], "points_given": 1 }
+        "partyB": { "owner": "jack",   "teams_given": [""], "points_given": 0.5 }
       },
        {
         "round": 1,
