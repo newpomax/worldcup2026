@@ -114,7 +114,9 @@
       "r2m07": "argentina",
       "r2m08": "switzerland"
     },
-    "round3": {},
+    "round3": {
+      "r3m01": "france"
+    },
     "round4": {},
     "thirdPlace": null,
     "championship": null
