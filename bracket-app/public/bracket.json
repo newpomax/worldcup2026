@@ -120,7 +120,9 @@
       "r3m03": "england",
       "r3m04": "argentina"
     },
-    "round4": {},
+    "round4": {
+      "r4m01": "spain"
+    },
     "thirdPlace": null,
     "championship": null
   },
